@@ -15,7 +15,7 @@ presets_directory = '/home/adam/GeneticMcode3/test/'
 possible_parents = 2 
 
 # how many children to produce on each run through
-children = 64
+children = 1
 
 # parent weighting
 primary_parent_weight = 100
@@ -114,6 +114,8 @@ def breedParents(breeders, flock, seeds, generation, mutation_chances, possible_
 #				print "done"
 #				sys.exit()
 #	   print 'experimental'
+		blocks_reference = {}
+		blocks_reference_count = []
 		for parent in breeders[group]:
 			if parent_count == winner:
 				parent_count += 1
@@ -204,23 +206,45 @@ def breedParents(breeders, flock, seeds, generation, mutation_chances, possible_
  			# block code time
 			block_number = None
 			for gene in parent_one.blocks:
-				if gene[4] == "post-script":
-					gene_block_number = gene[3]
-				elif gene[4] == "script":
-					gene_block_number = gene[5] + "_" + gene[2]
+				offset = 2
+				type_offset = 4
+				if gene[3] == "post-script":
+					gene_block_number = gene[2]
+					offset = 1
+					type_offset = 3
+				elif gene[3] == "script":
+					gene_block_number = gene[4] + "_" + `gene[1]`
+					offset = 1
+					type_offset = 3
 				elif gene[4] == "init":
-					gene_block_number = gene[3] + "_" + gene[2]
+					gene_block_number = gene[3] + "_" + `gene[2]`
 				else:
 					print `gene`
 					print "failure"
 					sys.exit()
 				if block_number != gene_block_number:
 					#print gene_block_number
-					block_number == gene_block_number
+					block_number = gene_block_number
+					print "block number:", block_number
 					# more goes here, like when blocks change and shit
-					# all kinds of sanity checks needed
-					# but none for now
-					# livin' on the edge baby
+					if blocks_reference.has_key(block_number):
+						# crazy tuple adjust function
+						print "shouldn't happen", `gene`
+						gene_len = len(gene) - 1
+						if gene_len == 5:
+							gene = ( blocks_reference[block_number], gene[1], gene[2], gene[3], gene[4], gene[5] )
+						elif gene_len == 4:
+							gene = ( blocks_reference[block_number], gene[1], gene[2], gene[3], gene[4] )
+						elif gene_len == 3:
+							gene = ( blocks_reference[block_number], gene[1], gene[2], gene[3] )
+						else:
+							print "fail:", gene_len
+							sys.exit()
+						print "happened anyway", `gene`
+						#gene[0] = blocks_reference[block_number]
+					else:
+						blocks_reference[block_number] = gene[0]
+						blocks_reference_count.append(gene[0])
 				# genero flag
 #				flag = False
 #				if gene[3] == 'init':
@@ -235,14 +259,22 @@ def breedParents(breeders, flock, seeds, generation, mutation_chances, possible_
 				# got a shapecode or wavecode, this is init stuff
 #				if flag:
 				# seriously cheaping out here to get stuff working now
-				if next_parent.blocks_content.has_key( gene[2:] ):
+				if next_parent.blocks_content.has_key( gene[offset:] ):
 					which = random.randint(0, block_parent_weight)
 					if which >= weight:
-						child.blocks_content[ gene[2:] ] = parent_one.blocks_content[ gene[2:] ]
+						child.blocks_content[ gene[offset:] ] = parent_one.blocks_content[ gene[offset:] ]
 					else:
-						child.blocks_content[ gene[2:] ] = next_parent.blocks_content[ gene[2:] ]
-					child.mutator(child.blocks_content[ gene[2:] ], gene, mutation_chances, gene[4], verbose)
+						child.blocks_content[ gene[offset:] ] = next_parent.blocks_content[ gene[offset:] ]
+					child.mutator(child.blocks_content[ gene[offset:] ], gene, mutation_chances, gene[type_offset], verbose)
 					if not gene in child.blocks:
+						print "child add block 1", `gene`
+						child.blocks.append(gene)
+				else:
+					# this secondary parent does not have this gene, add and/or mutate it
+					child.blocks_content[ gene[offset:] ] = parent_one.blocks_content[ gene[offset:] ]
+					child.mutator(child.blocks_content[ gene[offset:] ], gene, mutation_chances, gene[type_offset], verbose)
+					if not gene in child.blocks:
+						print "child add block 0", `gene`
 						child.blocks.append(gene)
 				continue
 #				if next_parent.has_key(gene):
@@ -255,14 +287,83 @@ def breedParents(breeders, flock, seeds, generation, mutation_chances, possible_
 #				else:
 #					child.tree[gene] = parent_one.tree[gene]
 #					child.mutator(parent_one.tree[gene], gene, mutation_chances, verbose)
+			print "next parent"
 			for gene in next_parent.blocks:
-				if parent_one.blocks_content.has_key( gene[2:] ):
+				if parent_one.blocks_content.has_key( gene[offset:] ):
 					# already done, skip it
 					continue
-				print "test1- no!"
-				child.blocks_content[ gene[2:] ] = next_parent.blocks_content[ gene[2:] ]
-				child.mutator(child.blocks_content[ gene[2:] ], gene, mutation_chances, gene[4], verbose)
+				# offset checks
+				offset = 2
+				type_offset = 4
+				print "fixme", `gene`
+				if gene[3] == "post-script":
+					gene_block_number = gene[2]
+					offset = 1
+					type_offset = 3
+				elif gene[3] == "script":
+					gene_block_number = gene[4] + "_" + `gene[1]`
+					offset = 1
+					type_offset = 3
+				elif gene[4] == "init":
+					pass
+					gene_block_number = gene[3] + "_" + `gene[2]`
+				else:
+					print `gene`
+					print "failure"
+					sys.exit()
+				# end offset checks
+				#block order fixes
+				if block_number != gene_block_number:
+					#print gene_block_number
+					block_number = gene_block_number
+					print "block number:", block_number
+					# more goes here, like when blocks change and shit
+				print `blocks_reference`, `block_number`
+				if blocks_reference.has_key(block_number):
+					# crazy tuple adjust function
+					print "fix it", `gene`
+					gene_len = len(gene) - 1
+					if gene_len == 5:
+						gene = ( blocks_reference[block_number], gene[1], gene[2], gene[3], gene[4], gene[5] )
+					elif gene_len == 4:
+						gene = ( blocks_reference[block_number], gene[1], gene[2], gene[3], gene[4] )
+					elif gene_len == 3:
+						gene = ( blocks_reference[block_number], gene[1], gene[2], gene[3] )
+					else:
+						print "fail:", gene_len
+						sys.exit()
+					print "better?", `gene`
+					#gene[0] = blocks_reference[block_number]
+				else:
+					print "do it", `gene`
+					if gene[0] in blocks_reference_count:
+						new_block_number = 1
+						while new_block_number in blocks_reference_count:
+							new_block_number += 1
+						blocks_reference[block_number] = gene[0]
+						# crazy tuple adjust function
+						gene_len = len(gene) - 1
+						if gene_len == 5:
+							gene = ( blocks_reference[block_number], gene[1], gene[2], gene[3], gene[4], gene[5] )
+						elif gene_len == 4:
+							gene = ( blocks_reference[block_number], gene[1], gene[2], gene[3], gene[4] )
+						elif gene_len == 3:
+							gene = ( blocks_reference[block_number], gene[1], gene[2], gene[3] )
+						else:
+							print "fail:", gene_len
+							sys.exit()
+						print "why not", `gene`
+						blocks_reference[block_number] = gene[0]
+					else:
+						blocks_reference[block_number] = gene[0]
+						blocks_reference_count.append(gene[0])
+				
+				# genero flag
+				print "test1- no! -", `offset`
+				child.blocks_content[ gene[offset:] ] = next_parent.blocks_content[ gene[offset:] ]
+				child.mutator(child.blocks_content[ gene[offset:] ], gene, mutation_chances, gene[type_offset], verbose)
 				if not gene in child.blocks:
+					print "child add block 2", `gene`
 					child.blocks.append(gene)
 #			if not parent_one.tree.has_key('blocks'):
 #				#rint "holy shit"
@@ -283,7 +384,18 @@ def breedParents(breeders, flock, seeds, generation, mutation_chances, possible_
 			if child.blocks == []:
 				print "fuck"
 				sys.exit()
+			##########
+			#
+			# child post-processing block
+			#
+			
+			#
+			# end child post-processing block
+			#
+			##########
 			child.blocks.sort()
+			print `blocks_reference`
+			print `child.blocks`
 			child.writeFile(seeds, generation, presets_directory, pretend)
 #			print "writeChildPreset_exp(" + child.file, seeds, generation, presets_directory, `pretend` + ")"
 	return

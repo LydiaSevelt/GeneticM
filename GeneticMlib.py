@@ -588,8 +588,8 @@ class Evolver:
 						if not current_block_gene == (gene_parts[1],  gene_parts[0]):
 							current_block_gene = (gene_parts[1],  gene_parts[0])
 							self.blocks_chunk_count += 1
-						self.blocks.append( ( self.blocks_chunk_count, order_number, gene_parts[1],  gene_parts[0], 'init', gene_parts[2]) )
-						self.blocks_content[( gene_parts[1], gene_parts[0], 'init', gene_parts[2])] = line
+						self.blocks.append( ( self.blocks_chunk_count, order_number, int(gene_parts[1]),  gene_parts[0], 'init', gene_parts[2]) )
+						self.blocks_content[( int(gene_parts[1]), gene_parts[0], 'init', gene_parts[2])] = line
 						continue
 					elif gene_check[gene_parts[2]]['type'] == 'float':
 						# check the value to see if it's valid
@@ -641,8 +641,8 @@ class Evolver:
 						if not current_block_gene == (gene_parts[1],  gene_parts[0]):
 							current_block_gene = (gene_parts[1],  gene_parts[0])
 							self.blocks_chunk_count += 1
-						self.blocks.append( ( self.blocks_chunk_count, order_number, gene_parts[1], gene_parts[0], 'init', gene_parts[2]) )
-						self.blocks_content[( gene_parts[1], gene_parts[0], 'init', gene_parts[2])] = line
+						self.blocks.append( ( self.blocks_chunk_count, order_number, int(gene_parts[1]), gene_parts[0], 'init', gene_parts[2]) )
+						self.blocks_content[( int(gene_parts[1]), gene_parts[0], 'init', gene_parts[2])] = line
 						continue
 					else:
 						print "this shouldn't happen 2"
@@ -744,7 +744,7 @@ class Evolver:
 				self.blocks_order_count += 1
 				order_number = self.blocks_order_count
 				#order_number = 'b'
-				gene_parts = [ gene[:9], number  ]
+				gene_parts = [ gene[:9], number ]
 #			elif sre.match(pixel_check, gene):
 			elif gene[:9] == 'per_pixel':
 				# these are script lines, nothing special, just numbered in order
@@ -814,18 +814,18 @@ class Evolver:
 #			print gene_parts.index(gene_parts[-1])
 			if gene_parts.index(gene_parts[-1]) == 1:
 				print "add3", `order_number`, `gene_parts`, "post-script"
-				if not current_block_gene == (int(gene_parts[1]), gene_parts[0]):
-					current_block_gene = (int(gene_parts[1]), gene_parts[0])
+				if not current_block_gene == gene_parts[0]:
+					current_block_gene = gene_parts[0]
 					self.blocks_chunk_count += 1
-				self.blocks.append( ( self.blocks_chunk_count, order_number, int(gene_parts[1]), gene_parts[0], 'post-script') )
+				self.blocks.append( ( self.blocks_chunk_count, int(gene_parts[1]), gene_parts[0], 'post-script') )
 				self.blocks_content[( int(gene_parts[1]), gene_parts[0], 'post-script')] = eq_dna
 			else:
 				print "add4", `order_number`, `gene_parts`, "script"
 				if not current_block_gene == (int(gene_parts[1]), gene_parts[0]):
 					current_block_gene = (int(gene_parts[1]), gene_parts[0])
 					self.blocks_chunk_count += 1
-				self.blocks.append( ( self.blocks_chunk_count, order_number, gene_parts[1], sub_number, 'script', gene_parts[0], gene_parts[2]) )
-				self.blocks_content[( gene_parts[1], sub_number, 'script', gene_parts[0], gene_parts[2])] = eq_dna
+				self.blocks.append( ( self.blocks_chunk_count, int(gene_parts[1]), int(sub_number), 'script', gene_parts[0], gene_parts[2]) )
+				self.blocks_content[( int(gene_parts[1]), int(sub_number), 'script', gene_parts[0], gene_parts[2])] = eq_dna
 		#############
 		#
 		# Post Processing
@@ -899,8 +899,49 @@ class Evolver:
 		a = type('a')
 		#print `self.blocks`
 		for line in self.blocks:
-			if line[4] == 'init':
-				gene = line[3] + '_' + line[2] + '_' + line[5]
+			if line[3] == 'script':
+				gene = line[4] + '_' + `line[1]` + '_' + line[5] + `line[2]`
+				full_line = ''
+				try:
+					t_val = self.blocks_content[ line[1:] ][0][1]
+					# if that works, then it's a list
+					for part in self.blocks_content[ line[1:] ]:
+						if not a == type(part[1]):
+							part[1] = `part[1]`
+						full_line += part[1]
+				except:
+					# not a list
+					full_line = self.blocks_content[ line[1:] ]
+					if not a == type(full_line):
+						full_line = `full_line`
+#				print gene, full_line
+				# change an empty list to a blank string
+				if full_line == [] or full_line == "[]":
+					full_line = ''
+				file.write(gene + '=' + full_line + '\n')
+			elif line[3] == 'post-script':
+				gene = line[2] + '_' + `line[1]`
+				full_line = ''
+				try:
+					t_val = self.blocks_content[ line[1:] ][0][1]
+					# if that works, then it's a list
+					for part in self.blocks_content[ line[1:] ]:
+						if not a == type(part[1]):
+							part[1] = `part[1]`
+						full_line += part[1]
+				except:
+					# not a list
+					full_line = self.blocks_content[ line[1:] ]
+					if not a == type(full_line):
+						full_line = `full_line`
+#				print gene, full_line
+				# change an empty list to a blank string
+				if full_line == [] or full_line == "[]":
+					full_line = ''
+				file.write(gene + '=' + full_line + '\n')
+			elif line[4] == 'init':
+				#print `line`, line[3], line[2], line[5]
+				gene = line[3] + '_' + `line[2]` + '_' + line[5]
 				full_line = ''
 #				print gene, full_line
 #				for part in self.blocks_content[line]:
@@ -912,46 +953,6 @@ class Evolver:
 					full_line = `full_line`
 #				print gene, full_line
 				if full_line == []:
-					full_line = ''
-				file.write(gene + '=' + full_line + '\n')
-			elif line[4] == 'script':
-				gene = line[5] + '_' + line[2] + '_' + line[6] + line[3]
-				full_line = ''
-				try:
-					t_val = self.blocks_content[ line[2:] ][0][1]
-					# if that works, then it's a list
-					for part in self.blocks_content[ line[2:] ]:
-						if not a == type(part[1]):
-							part[1] = `part[1]`
-						full_line += part[1]
-				except:
-					# not a list
-					full_line = self.blocks_content[ line[2:] ]
-					if not a == type(full_line):
-						full_line = `full_line`
-#				print gene, full_line
-				# change an empty list to a blank string
-				if full_line == [] or full_line == "[]":
-					full_line = ''
-				file.write(gene + '=' + full_line + '\n')
-			elif line[4] == 'post-script':
-				gene = line[3] + '_' + `line[2]`
-				full_line = ''
-				try:
-					t_val = self.blocks_content[ line[2:] ][0][1]
-					# if that works, then it's a list
-					for part in self.blocks_content[ line[2:] ]:
-						if not a == type(part[1]):
-							part[1] = `part[1]`
-						full_line += part[1]
-				except:
-					# not a list
-					full_line = self.blocks_content[ line[2:] ]
-					if not a == type(full_line):
-						full_line = `full_line`
-#				print gene, full_line
-				# change an empty list to a blank string
-				if full_line == [] or full_line == "[]":
 					full_line = ''
 				file.write(gene + '=' + full_line + '\n')
 			else:
