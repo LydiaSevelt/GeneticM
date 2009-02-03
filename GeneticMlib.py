@@ -1510,6 +1510,7 @@ class Evolver:
 		if it's a projectm variable then give it a go at mutation"""
 		if not projectm_variables.has_key(variable):
 			# must be user set or a variable we arn't dealing with, ignore it
+			print "user var!", `variable`
 			return variable
 		# yeah, that same gross way of getting a random variable
 		# oh well, it has to be gutted later anyway

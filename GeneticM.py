@@ -340,7 +340,7 @@ def breedParents(breeders, flock, seeds, generation, mutation_chances, possible_
 						new_block_number = 1
 						while new_block_number in blocks_reference_count:
 							new_block_number += 1
-						blocks_reference[block_number] = gene[0]
+						blocks_reference[block_number] = new_block_number
 						# crazy tuple adjust function
 						gene_len = len(gene) - 1
 						if gene_len == 5:
