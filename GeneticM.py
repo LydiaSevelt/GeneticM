@@ -209,15 +209,15 @@ def breedParents(breeders, flock, seeds, generation, mutation_chances, possible_
 				offset = 2
 				type_offset = 4
 				if gene[3] == "post-script":
-					gene_block_number = gene[2]
+					gene_block_number = gene[2] + "_" + gene[3]
 					offset = 1
 					type_offset = 3
 				elif gene[3] == "script":
-					gene_block_number = gene[4] + "_" + `gene[1]`
+					gene_block_number = gene[4] + "_" + `gene[1]` + "_" + gene[3] + "_" + gene[5]
 					offset = 1
 					type_offset = 3
 				elif gene[4] == "init":
-					gene_block_number = gene[3] + "_" + `gene[2]`
+					gene_block_number = gene[3] + "_" + `gene[2]` + "_" + gene[4]
 				else:
 					print `gene`
 					print "failure"
@@ -227,6 +227,7 @@ def breedParents(breeders, flock, seeds, generation, mutation_chances, possible_
 					block_number = gene_block_number
 					print "block number:", block_number
 					# more goes here, like when blocks change and shit
+					print `blocks_reference`, `block_number`
 					if blocks_reference.has_key(block_number):
 						# crazy tuple adjust function
 						print "shouldn't happen", `gene`
@@ -297,16 +298,16 @@ def breedParents(breeders, flock, seeds, generation, mutation_chances, possible_
 				type_offset = 4
 				print "fixme", `gene`
 				if gene[3] == "post-script":
-					gene_block_number = gene[2]
+					gene_block_number = gene[2] + "_" + gene[3]
 					offset = 1
 					type_offset = 3
 				elif gene[3] == "script":
-					gene_block_number = gene[4] + "_" + `gene[1]`
+					gene_block_number = gene[4] + "_" + `gene[1]` + "_" + gene[3] + "_" + gene[5]
 					offset = 1
 					type_offset = 3
 				elif gene[4] == "init":
 					pass
-					gene_block_number = gene[3] + "_" + `gene[2]`
+					gene_block_number = gene[3] + "_" + `gene[2]` + "_" + gene[4]
 				else:
 					print `gene`
 					print "failure"
@@ -338,7 +339,11 @@ def breedParents(breeders, flock, seeds, generation, mutation_chances, possible_
 					print "do it", `gene`
 					if gene[0] in blocks_reference_count:
 						new_block_number = 1
-						while new_block_number in blocks_reference_count:
+						#while new_block_number in blocks_reference_count:
+						#	new_block_number += 1
+
+						# this should make sure we advance the number
+						for temp_count in blocks_reference_count:
 							new_block_number += 1
 						blocks_reference[block_number] = new_block_number
 						# crazy tuple adjust function
@@ -354,12 +359,13 @@ def breedParents(breeders, flock, seeds, generation, mutation_chances, possible_
 							sys.exit()
 						print "why not", `gene`
 						blocks_reference[block_number] = gene[0]
+						blocks_reference_count.append(gene[0])
 					else:
 						blocks_reference[block_number] = gene[0]
 						blocks_reference_count.append(gene[0])
 				
 				# genero flag
-				print "test1- no! -", `offset`
+				#print "test1- no! -", `offset`
 				child.blocks_content[ gene[offset:] ] = next_parent.blocks_content[ gene[offset:] ]
 				child.mutator(child.blocks_content[ gene[offset:] ], gene, mutation_chances, gene[type_offset], verbose)
 				if not gene in child.blocks:

@@ -1080,6 +1080,12 @@ class Evolver:
 	#			   variable = variable_mutation(variable)
 				line = sre.sub(variable_get, '', line, 1)
 				parsed_list.append( [ depth, variable, 'variable' ] )
+				### Print out user variables here, for fixing cross contamination
+				if not projectm_variables.has_key(variable):
+					# must be user set or a variable we arn't dealing with, ignore it
+					print "user var:", `variable`
+				### End User var notification
+
 	#		   depth += 1
 	#		   new_line += variable
 		# check for forgotten parens and close them
