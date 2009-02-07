@@ -365,7 +365,7 @@ class Evolver:
 				line = line[:-1]
 			if line == '':
 				continue
-			if sre.match('^\\.*', line):
+			if sre.match('^//.*', line):
 				continue
 			if sre.match('\[preset.*', line):
 				continue
