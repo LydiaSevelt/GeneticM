@@ -105,6 +105,8 @@ def breedParents(breeders, flock, seeds, generation, mutation_chances, possible_
 		seeds += 1
 		child_file = presets_directory + 'GeneticM-' + `generation` + '-' + `count` + '.prjm'
 		child = GeneticMlib.Evolver(child_file, False)
+		# append parent name
+		child.parents_names.append(parent_one.file)
 		child_num = 0
 		parent_count = 0
 		start_flag = True
@@ -132,6 +134,8 @@ def breedParents(breeders, flock, seeds, generation, mutation_chances, possible_
 			#print parent_one
 			#next_parent = readPresetFileExp(pool[parent], verbose)
 			print flock[parent].file
+			# append parent name
+			child.parents_names.append(flock[parent].file)
 			time.sleep(.1)
 			next_parent = flock[parent]
 			flock[parent].readFile(False)

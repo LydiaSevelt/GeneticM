@@ -60,7 +60,6 @@ any_point_val = { 'min':None, 'max':None, 'type':'float' }
 
 projectm_genes = { \
 	\
-	# what's up with warp? commented out?
 	'fWarpScale':greater_than_point_zero, \
 	\
 	'zoom':greater_than_zero, 'fZoomExponent':greater_than_zero, 'warp':greater_than_point_zero, \
@@ -101,139 +100,143 @@ projectm_genes = { \
 }
 
 projectm_wave_genes = { \
-						'r':zero_to_one, 'g':zero_to_one, 'b':zero_to_one,'a':zero_to_one, \
-						'x':zero_to_one, 'y':zero_to_one, \
-						'sample':zero_to_one, 'smoothing':zero_to_one, \
-						\
-						'value1':negative_one_to_one, 'value2':negative_one_to_one, \
-						\
-						'bSpectrum':bool_val, 'bDrawThick':bool_val, 'bAdditive':bool_val, 'bUseDots':bool_val, \
-						'enabled':bool_val, \
-						\
-						'scaling':greater_than_zero, 'scaling':greater_than_zero, \
-						\
-						'samples':one_to_twozerofoureight, \
-						\
-						'sep':negative_onehundred_to_onehundred \
+			'r':zero_to_one, 'g':zero_to_one, 'b':zero_to_one,'a':zero_to_one, \
+			'x':zero_to_one, 'y':zero_to_one, \
+			'sample':zero_to_one, 'smoothing':zero_to_one, \
+			\
+			'value1':negative_one_to_one, 'value2':negative_one_to_one, \
+			\
+			'bSpectrum':bool_val, 'bDrawThick':bool_val, 'bAdditive':bool_val, 'bUseDots':bool_val, \
+			'enabled':bool_val, \
+			\
+			'scaling':greater_than_zero, 'scaling':greater_than_zero, \
+			\
+			'samples':one_to_twozerofoureight, \
+			\
+			'sep':negative_onehundred_to_onehundred \
 }
 
 projectm_shape_genes = { \
-						'border_r':zero_to_one, 'border_g':zero_to_one, 'border_b':zero_to_one, 'border_a':zero_to_one, \
-						'r2':zero_to_one, 'g2':zero_to_one, 'b2':zero_to_one, 'a2':zero_to_one, \
-						'r':zero_to_one, 'g':zero_to_one, 'b':zero_to_one, 'a':zero_to_one, \
-						'y':zero_to_one, 'x':zero_to_one, 
-						\
-						'textured':bool_val, 'enabled':bool_val, 'additive':bool_val, 'thickOutline':bool_val, \
-						\
-						'rad':greater_than_zero, 'ang':any_val, 'tex_ang':any_val, \
-						\
-						'sides':three_to_onehundred, \
-						\
-						'tex_zoom':greater_than_zero
+			'border_r':zero_to_one, 'border_g':zero_to_one, 'border_b':zero_to_one, 'border_a':zero_to_one, \
+			'r2':zero_to_one, 'g2':zero_to_one, 'b2':zero_to_one, 'a2':zero_to_one, \
+			'r':zero_to_one, 'g':zero_to_one, 'b':zero_to_one, 'a':zero_to_one, \
+			'y':zero_to_one, 'x':zero_to_one, 
+			\
+			'textured':bool_val, 'enabled':bool_val, 'additive':bool_val, 'thickOutline':bool_val, \
+			\
+			'rad':greater_than_zero, 'ang':any_val, 'tex_ang':any_val, \
+			\
+			'sides':three_to_onehundred, \
+			\
+			'tex_zoom':greater_than_zero
 }
 
 # this isn't really complete, but should do for now
-projectm_variables = { 'zoom':True, \
-						'zoomexp':True, \
-						'rot':True, \
-						'warp':True, \
-						'cx':True, \
-						'cy':True, \
-						'dx':True, \
-						'dy':True, \
-						'sx':True, \
-						'sy':True, \
-						'wave_mode':True, \
-						'wave_x':True, \
-						'wave_y':True, \
-						'wave_r':True, \
-						'wave_g':True, \
-						'wave_b':True, \
-						'wave_a':True, \
-						'wave_mystery':True, \
-						'wave_usedots':True, \
-						'wave_thick':True, \
-						'wave_additive':True, \
-						'wave_brighten':True, \
-						'ob_size':True, \
-						'ob_r':True, \
-						'ob_g':True, \
-						'ob_b':True, \
-						'ob_a':True, \
-						'ib_size':True, \
-						'ib_r':True, \
-						'ib_g':True, \
-						'ib_b':True, \
-						'ib_a':True, \
-						'mv_r':True, \
-						'mv_g':True, \
-						'mv_b':True, \
-						'mv_a':True, \
-						'mv_x':True, \
-						'mv_y':True, \
-						'mv_l':True, \
-						'mv_dx':True, \
-						'mv_dy':True, \
-						'decay':True, \
-						'gamma':True, \
-						'echo_zoom':True, \
-						'echo_alpha':True, \
-						'echo_orient':True, \
-						'darken_center':True, \
-						'wrap':True, \
-						'invert':True, \
-						'brighten':True, \
-						'darken':True, \
-						'solarize':True, \
-						'monitor':True, \
-						'time':False, \
-						'fps':False, \
-						'frame':False, \
-						'progress':False, \
-						'bass':False, \
-						'mid':False, \
-						'treb':False, \
-						'bass_att':False, \
-						'mid_att':False, \
-						'treb_att':False, \
-						'meshx':False, \
-						'meshy':False, \
-						# these from here out are per-pixel only..
-						'x':False, \
-						'y':False, \
-						'rad':False, \
-						'ang':False }
+projectm_variables = {  'zoom':True, \
+			'zoomexp':True, \
+			'rot':True, \
+			'warp':True, \
+			'cx':True, \
+			'cy':True, \
+			'dx':True, \
+			'dy':True, \
+			'sx':True, \
+			'sy':True, \
+			'wave_mode':True, \
+			'wave_x':True, \
+			'wave_y':True, \
+			'wave_r':True, \
+			'wave_g':True, \
+			'wave_b':True, \
+			'wave_a':True, \
+			'wave_mystery':True, \
+			'wave_usedots':True, \
+			'wave_thick':True, \
+			'wave_additive':True, \
+			'wave_brighten':True, \
+			'ob_size':True, \
+			'ob_r':True, \
+			'ob_g':True, \
+			'ob_b':True, \
+			'ob_a':True, \
+			'ib_size':True, \
+			'ib_r':True, \
+			'ib_g':True, \
+			'ib_b':True, \
+			'ib_a':True, \
+			'mv_r':True, \
+			'mv_g':True, \
+			'mv_b':True, \
+			'mv_a':True, \
+			'mv_x':True, \
+			'mv_y':True, \
+			'mv_l':True, \
+			'mv_dx':True, \
+			'mv_dy':True, \
+			'decay':True, \
+			'gamma':True, \
+			'echo_zoom':True, \
+			'echo_alpha':True, \
+			'echo_orient':True, \
+			'darken_center':True, \
+			'wrap':True, \
+			'invert':True, \
+			'brighten':True, \
+			'darken':True, \
+			'solarize':True, \
+			'monitor':True, \
+			'time':False, \
+			'fps':False, \
+			'frame':False, \
+			'progress':False, \
+			'bass':False, \
+			'mid':False, \
+			'treb':False, \
+			'bass_att':False, \
+			'mid_att':False, \
+			'treb_att':False, \
+			'meshx':False, \
+			'meshy':False, \
+			# these from here out are per-pixel only..
+			'x':False, \
+			'y':False, \
+			'rad':False, \
+			'ang':False }
 
 # projectm functions and their special circumstances
 # the number is the number of values that must be contained within it,
 # seperated by commas
-projectm_functions = { 'int(':1, \
-						'abs(':1, \
-						'sin(':1, \
-						'cos(':1, \
-						'tan(':1, \
-						'asin(':1, \
-						'acos(':1, \
-						'atan(':1, \
-						'sqr(':1, \
-						'sqrt(':1, \
-						'log(':1, \
-						'log10(':1, \
-						'sign(':1, \
-						'rand(':1, \
-						'bnot(':1, \
-						'atan2(':2, \
-						'atan6(':2, \
-						'pow(':2, \
-						'min(':2, \
-						'max(':2, \
-						'sigmoid(':2, \
-						'bor(':2, \
-						'equal(':2, \
-						'above(':2, \
-						'below(':2, \
-						'band(':2, \
-						'if(':3 }
+projectm_functions = {  'int(':1, \
+			'abs(':1, \
+			'sin(':1, \
+			'cos(':1, \
+			'tan(':1, \
+			'asin(':1, \
+			'acos(':1, \
+			'atan(':1, \
+			'sqr(':1, \
+			'sqrt(':1, \
+			'exp(':1, \
+			'log(':1, \
+			'log10(':1, \
+			'sign(':1, \
+			'rand(':1, \
+			'bnot(':1, \
+			'fact(':1, \
+			'atan2(':2, \
+			'atan6(':2, \
+			'pow(':2, \
+			'min(':2, \
+			'max(':2, \
+			'sigmoid(':2, \
+			'nchoosek(':2, \
+			'bor(':2, \
+			'equal(':2, \
+			'above(':2, \
+			'below(':2, \
+			'band(':2, \
+			'if(':3 }
+# missing: exp nchoosek fact - These have been added, hopefully they are ok to be included
 
 # scripting line check
 
@@ -322,6 +325,7 @@ class Evolver:
 		self.order_count = 0
 		self.parents_order = []
 		self.file = file
+		self.parents_names = []
 	
 	def readFile(self, verbose):
 		"""This replaces readPresetFile, reading the file and returning it's 'DNA' string
@@ -360,6 +364,8 @@ class Evolver:
 			if line[-1] == '\r':
 				line = line[:-1]
 			if line == '':
+				continue
+			if sre.match('^\\.*', line):
 				continue
 			if sre.match('\[preset.*', line):
 				continue
@@ -960,6 +966,8 @@ class Evolver:
 				print line
 				sys.exit()
 		if not pretend:
+			for parent in self.parents_names:
+				file.write('//' + parent + '\n')
 			file.close()
 		return
 	
