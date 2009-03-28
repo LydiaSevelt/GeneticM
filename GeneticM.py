@@ -15,7 +15,11 @@ presets_directory = '/home/adam/GeneticMcode3/test/'
 possible_parents = 2 
 
 # how many children to produce on each run through
-children = 1
+children = 25
+
+# how many generations does a preset live for?
+# dead presets will be omitted from the flock
+lifespan = 10
 
 # parent weighting
 primary_parent_weight = 100
@@ -56,13 +60,14 @@ def checkGeneration(flock):
 	current += 1
 	return current
 
-def selectBreeders(seeds, children, possible_parents):
+def selectBreeders(seeds, children, possible_parents, too_old, flock):
 	"""This takes in the flock and randomly selects #children presets to breed
 	This returns a dictionary of randomly selected presets pairs to breed"""
 	# subtrack one from the seeds, random.randint will otherwise end up with out of range vaules by one
 	seeds -= 1
 	parents = {} 
 	selections = 0
+	flag = True
 	while selections < children:
 		num_parents = random.randint(2, possible_parents)
 		count = 0
@@ -70,6 +75,17 @@ def selectBreeders(seeds, children, possible_parents):
 			breeder = random.randint(0, seeds)
 			if parents.has_key(breeder):
 				continue
+			# do not accept presets that are too old to breed
+			prjm_file = flock[file].file.split('/')
+			parts = prjm_file[-1].split('-')
+			try: 
+				preset_generation = int(parts[1])
+			except:
+				flag = False
+				break
+			if preset_generation < too_old:
+				continue
+			# end too_old code
 			if count == 0:
 				main_parent = breeder
 				parents[main_parent] = [ breeder ]
@@ -78,7 +94,9 @@ def selectBreeders(seeds, children, possible_parents):
 			if not main_parent == breeder:
 				parents[main_parent].append(breeder)
 				count += 1
-		selections += 1
+		if flag:
+			selections += 1
+			flag = True
 	return parents
 
 def breedParents(breeders, flock, seeds, generation, mutation_chances, possible_parents, presets_directory, pretend, verbose):
@@ -434,7 +452,9 @@ for file in full_list:
 
 generation = checkGeneration(flock)
 
-breeders = selectBreeders(count, children, possible_parents)
+too_old = generation - lifespan
+
+breeders = selectBreeders(count, children, possible_parents, too_old, flock)
 
 #print breeders
 #for file in flock:
