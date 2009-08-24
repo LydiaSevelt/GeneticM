@@ -15,20 +15,20 @@ presets_directory = '/home/adam/GeneticMcode3/test/'
 possible_parents = 2 
 
 # how many children to produce on each run through
-children = 25
+children = 1
 
 # how many generations does a preset live for?
 # dead presets will be omitted from the flock
 lifespan = 10
 
 # parent weighting
-primary_parent_weight = 100
+primary_parent_weight = 60
 
 # tree parent weight
-tree_parent_weight = 100
+tree_parent_weight = 60
 
 # block parent line swapping weight
-block_parent_weight = 100
+block_parent_weight = 60
 
 # group all mutation chances into a single dictionary
 mutation_chances = { 
@@ -44,11 +44,13 @@ mutation_chances = {
 	'constructor':3 \
 	}   
 
+# basic function to check the directory for the format of generation-number and find the current generation, incrimenting for "this" generation
+# that wasn't a confusing sentance at all.
 def checkGeneration(flock):
 	"""This checks to see what generation we are one and returns the next generation"""
 	current = 0
-	for file in flock:
-		prjm_file = flock[file].file.split('/')
+	for count in flock:
+		prjm_file = flock[count].file.split('/')
 		if sre.match('GeneticM', prjm_file[-1]):
 			parts = prjm_file[-1].split('-')
 			try: 
@@ -76,7 +78,8 @@ def selectBreeders(seeds, children, possible_parents, too_old, flock):
 			if parents.has_key(breeder):
 				continue
 			# do not accept presets that are too old to breed
-			prjm_file = flock[file].file.split('/')
+			# ERROR - This creates an endless loop if there are not enough parents - FIXME
+			prjm_file = flock[breeder].file.split('/')
 			parts = prjm_file[-1].split('-')
 			try: 
 				preset_generation = int(parts[1])
@@ -102,24 +105,29 @@ def selectBreeders(seeds, children, possible_parents, too_old, flock):
 def breedParents(breeders, flock, seeds, generation, mutation_chances, possible_parents, presets_directory, pretend, verbose):
 	"""This takes the dictionary of pairs and breeds them together
 	This includes mutation, and later will include equation editing"""
+	# group is a terrible name for this variable
+	# group is really the "main parent" as refered to in select breeders used as the key in the dictionary to retrive the list of all parents
+	# this actually has no bearing on which parent is picked to be the primary parent
+	# { parent1:[parent2, parent3, etc ] }
 	for group in breeders:
 		# count number of parents in list
 		# -1 is because everything else starts counting from zero
-		count = -1
-		for parent in breeders[group]:
-			count += 1
+		count = len(breeders[group]) - 1
+
+		# what? why
+#		count = -1
+#		for parent in breeders[group]:
+#			count += 1
 
 		# lets find out which is "parent one" and set it's weight
 		winner = random.randint(0, count)
-		# Setting the weight manually
+		# set the weight of the primary parent
 		weight = random.randint(0, primary_parent_weight)
-#		weight = 95
-#		parent_one = readPresetFileExp(pool[breeders[group][winner]], verbose)
+		# read the full file into the flock object
 		flock[breeders[group][winner]].readFile(False)
 		#print `flock[breeders[group][winner]].blocks`
 		parent_one = flock[breeders[group][winner]]
 		# choose next parent
-#		child = { 'tree':{}, 'order':[] }
 		seeds += 1
 		child_file = presets_directory + 'GeneticM-' + `generation` + '-' + `count` + '.prjm'
 		child = GeneticMlib.Evolver(child_file, False)
@@ -128,14 +136,11 @@ def breedParents(breeders, flock, seeds, generation, mutation_chances, possible_
 		child_num = 0
 		parent_count = 0
 		start_flag = True
-#		for gene in parent_one.tree:
-#			if sre.match('^wavecode*', gene):
-#				print gene
-#				print "done"
-#				sys.exit()
-#	   print 'experimental'
+		# block referencing tracking
 		blocks_reference = {}
 		blocks_reference_count = []
+		# primary parent file loaded
+		# new child file loaded
 		for parent in breeders[group]:
 			if parent_count == winner:
 				parent_count += 1
@@ -151,7 +156,7 @@ def breedParents(breeders, flock, seeds, generation, mutation_chances, possible_
 #				child = { 'tree':{}, 'order':[] }
 			#print parent_one
 			#next_parent = readPresetFileExp(pool[parent], verbose)
-			print flock[parent].file
+			#print flock[parent].file
 			# append parent name
 			child.parents_names.append(flock[parent].file)
 			time.sleep(.1)
@@ -171,6 +176,7 @@ def breedParents(breeders, flock, seeds, generation, mutation_chances, possible_
 #				sys.exit('crap')
 			# start mixing
 #			dupes_list = []
+#			print `parent_one.tree`
 			for gene in parent_one.tree:
 #				print "yo?", gene
 #				if gene in dupes_list:
@@ -230,44 +236,100 @@ def breedParents(breeders, flock, seeds, generation, mutation_chances, possible_
 			for gene in parent_one.blocks:
 				offset = 2
 				type_offset = 4
+				print "this is it", `gene`
 				if gene[3] == "post-script":
+					#                  per-frame      post-script
 					gene_block_number = gene[2] + "_" + gene[3]
 					offset = 1
 					type_offset = 3
 				elif gene[3] == "script":
+					#                    wave              0               script         per_point
 					gene_block_number = gene[4] + "_" + `gene[1]` + "_" + gene[3] + "_" + gene[5]
 					offset = 1
 					type_offset = 3
 				elif gene[4] == "init":
+					#                  wavecode            0              init
 					gene_block_number = gene[3] + "_" + `gene[2]` + "_" + gene[4]
 				else:
 					print `gene`
 					print "failure"
 					sys.exit()
-				if block_number != gene_block_number:
+				# check to see if this gene block has been seen before
+				print "blocks reference", `blocks_reference`, "gene block num", `gene_block_number`
+				block_exists_flag = False
+				if blocks_reference.has_key(gene_block_number):
+				# use the block_number variable to check if this is a new block
+				# this is stupid
+				#if block_number != gene_block_number:
+					block_exists_flag = True
 					#print gene_block_number
+					# set the block_number variable to the current block number we are on <- why?
 					block_number = gene_block_number
-					print "block number:", block_number
+					#print "block number:", block_number
 					# more goes here, like when blocks change and shit
-					print `blocks_reference`, `block_number`
-					if blocks_reference.has_key(block_number):
+					# ^That's a real clear comment you asshat
+					#
+					# All that code replaced with this?
+					#
+					#blocks_reference[block_number] = gene[0]
+					#blocks_reference_count.append(gene[0])
+					#
+					########################################
+					#
+					# Has this all become obsolete? really?
+					#
+					print "1", `blocks_reference`, `block_number`
+					block_count_flag = False
+					# This block has been seen before, does it's number match?
+					if not blocks_reference[block_number] == gene[0]:
+						# it does not, set it to the choosen number for this block
+						print "fixing block gene number due to it already existing"
+						new_block_number = blocks_reference[block_number]
+						block_count_flag = True
+					# we have not seen this block before, is it's block number in use?
+					elif gene[0] not in blocks_reference_count:
+						# this should make sure we advance the number
+						print "block reference count fix", `gene`, `blocks_reference`, `blocks_reference_count`
+						blocks_reference_count.sort()
+						new_block_number = blocks_reference_count[-1] + 1
+						print "block num:", `block_number`, "last ref count num:", `blocks_reference_count[-1]`, "new:", `new_block_number`
+						block_count_flag = True
+					if block_count_flag:
 						# crazy tuple adjust function
-						print "shouldn't happen", `gene`
+						blocks_reference[block_number] = new_block_number
+						print "should happen", `gene`
 						gene_len = len(gene) - 1
 						if gene_len == 5:
 							gene = ( blocks_reference[block_number], gene[1], gene[2], gene[3], gene[4], gene[5] )
+							print "block num gene mod 0 - 5"
 						elif gene_len == 4:
 							gene = ( blocks_reference[block_number], gene[1], gene[2], gene[3], gene[4] )
+							print "block num gene mod 0 - 4"
 						elif gene_len == 3:
 							gene = ( blocks_reference[block_number], gene[1], gene[2], gene[3] )
+							print "block num gene mod 0 - 3"
 						else:
 							print "fail:", gene_len
 							sys.exit()
 						print "happened anyway", `gene`
 						#gene[0] = blocks_reference[block_number]
-					else:
-						blocks_reference[block_number] = gene[0]
-						blocks_reference_count.append(gene[0])
+						block_count_flag = False
+					#
+					# Dead code running?
+					#
+					###########################################
+					blocks_reference[block_number] = gene[0]
+					blocks_reference_count.append(gene[0])
+				#
+				#########################
+				#
+				# End blocks_reference.has_key(gene_block_number)
+				#
+				#########################
+#				else:
+					# blocks_reference does not contain this gene_block_number
+					# meaning a block like wave_0_script_per_point has not been defined in the reference dict yet
+
 				# genero flag
 #				flag = False
 #				if gene[3] == 'init':
@@ -286,18 +348,96 @@ def breedParents(breeders, flock, seeds, generation, mutation_chances, possible_
 					which = random.randint(0, block_parent_weight)
 					if which >= weight:
 						child.blocks_content[ gene[offset:] ] = parent_one.blocks_content[ gene[offset:] ]
+						print "p1 win 1"
 					else:
 						child.blocks_content[ gene[offset:] ] = next_parent.blocks_content[ gene[offset:] ]
+						print "p2 win 1"
 					child.mutator(child.blocks_content[ gene[offset:] ], gene, mutation_chances, gene[type_offset], verbose)
+				
+					###########################################
+					#
+					# Start Check funtion
+					#
+					if not block_exists_flag and blocks_reference_count:
+						#	if gene[0] not in blocks_reference_count:
+						# this should make sure we advance the number
+						print "block reference count fix 2", `gene`, `blocks_reference`, `blocks_reference_count`
+						blocks_reference_count.sort()
+						new_block_number = blocks_reference_count[-1] + 1
+						print "block num: 2 ", `gene_block_number`, "last ref count num:", `blocks_reference_count[-1]`, "new:", `new_block_number`
+						# crazy tuple adjust function
+						blocks_reference[gene_block_number] = new_block_number
+						print "should happen", `gene`
+						gene_len = len(gene) - 1
+						if gene_len == 5:
+							gene = ( blocks_reference[gene_block_number], gene[1], gene[2], gene[3], gene[4], gene[5] )
+							print "block num gene mod 4 - 5"
+						elif gene_len == 4:
+							gene = ( blocks_reference[gene_block_number], gene[1], gene[2], gene[3], gene[4] )
+							print "block num gene mod 4 - 4"
+						elif gene_len == 3:
+							gene = ( blocks_reference[gene_block_number], gene[1], gene[2], gene[3] )
+							print "block num gene mod 4 - 3"
+						else:
+							print "fail:", gene_len
+							sys.exit()
+						print "happened anyway", `gene`
+						#gene[0] = blocks_reference[block_number]
+						#block_count_flag = False
+					#
+					# End Check funtion
+					#
+					###########################################
 					if not gene in child.blocks:
 						print "child add block 1", `gene`
+						blocks_reference[gene_block_number] = gene[0]
+						blocks_reference_count.append(gene[0])
+
 						child.blocks.append(gene)
 				else:
 					# this secondary parent does not have this gene, add and/or mutate it
 					child.blocks_content[ gene[offset:] ] = parent_one.blocks_content[ gene[offset:] ]
 					child.mutator(child.blocks_content[ gene[offset:] ], gene, mutation_chances, gene[type_offset], verbose)
+
+					###########################################
+					#
+					# Start Check funtion
+					#
+					if not block_exists_flag and blocks_reference_count:
+						#	if gene[0] not in blocks_reference_count:
+						# this should make sure we advance the number
+						print "block reference count fix 2", `gene`, `blocks_reference`, `blocks_reference_count`
+						blocks_reference_count.sort()
+						new_block_number = blocks_reference_count[-1] + 1
+						print "block num: 2 ", `gene_block_number`, "last ref count num:", `blocks_reference_count[-1]`, "new:", `new_block_number`
+						# crazy tuple adjust function
+						blocks_reference[gene_block_number] = new_block_number
+						print "shouldn't happen", `gene`
+						gene_len = len(gene) - 1
+						if gene_len == 5:
+							gene = ( blocks_reference[gene_block_number], gene[1], gene[2], gene[3], gene[4], gene[5] )
+							print "block num gene mod 5 - 5"
+						elif gene_len == 4:
+							gene = ( blocks_reference[gene_block_number], gene[1], gene[2], gene[3], gene[4] )
+							print "block num gene mod 5 - 4"
+						elif gene_len == 3:
+							gene = ( blocks_reference[gene_block_number], gene[1], gene[2], gene[3] )
+							print "block num gene mod 5 - 3"
+						else:
+							print "fail:", gene_len
+							sys.exit()
+						print "happened anyway", `gene`
+						#gene[0] = blocks_reference[block_number]
+						#block_count_flag = False
+					#
+					# End Check funtion
+					#
+					###########################################
 					if not gene in child.blocks:
 						print "child add block 0", `gene`
+						blocks_reference[gene_block_number] = gene[0]
+						blocks_reference_count.append(gene[0])
+
 						child.blocks.append(gene)
 				continue
 #				if next_parent.has_key(gene):
@@ -320,15 +460,19 @@ def breedParents(breeders, flock, seeds, generation, mutation_chances, possible_
 				type_offset = 4
 				print "fixme", `gene`
 				if gene[3] == "post-script":
+					#                  per-frame      post-script
 					gene_block_number = gene[2] + "_" + gene[3]
 					offset = 1
 					type_offset = 3
 				elif gene[3] == "script":
+					#                    wave              0               script         per_point
 					gene_block_number = gene[4] + "_" + `gene[1]` + "_" + gene[3] + "_" + gene[5]
 					offset = 1
 					type_offset = 3
 				elif gene[4] == "init":
+					# what?
 					pass
+					#                  wavecode            0              init
 					gene_block_number = gene[3] + "_" + `gene[2]` + "_" + gene[4]
 				else:
 					print `gene`
@@ -341,50 +485,66 @@ def breedParents(breeders, flock, seeds, generation, mutation_chances, possible_
 					block_number = gene_block_number
 					print "block number:", block_number
 					# more goes here, like when blocks change and shit
-				print `blocks_reference`, `block_number`
-				if blocks_reference.has_key(block_number):
-					# crazy tuple adjust function
-					print "fix it", `gene`
-					gene_len = len(gene) - 1
-					if gene_len == 5:
-						gene = ( blocks_reference[block_number], gene[1], gene[2], gene[3], gene[4], gene[5] )
-					elif gene_len == 4:
-						gene = ( blocks_reference[block_number], gene[1], gene[2], gene[3], gene[4] )
-					elif gene_len == 3:
-						gene = ( blocks_reference[block_number], gene[1], gene[2], gene[3] )
-					else:
-						print "fail:", gene_len
-						sys.exit()
-					print "better?", `gene`
-					#gene[0] = blocks_reference[block_number]
-				else:
-					print "do it", `gene`
-					if gene[0] in blocks_reference_count:
-						new_block_number = 1
-						#while new_block_number in blocks_reference_count:
-						#	new_block_number += 1
-
+					# ^Another brilliant comment, I know exactly what you were thinking
+					print `blocks_reference`, `block_number`
+					if blocks_reference.has_key(block_number):
+						# this *WILL* happen
+						block_count_flag = True
+					elif gene[0] in blocks_reference_count:
 						# this should make sure we advance the number
-						for temp_count in blocks_reference_count:
-							new_block_number += 1
-						blocks_reference[block_number] = new_block_number
+						print "block reference count fix", `gene`, `blocks_reference`, `blocks_reference_count`
+						blocks_reference_count.sort()
+						new_block_number = blocks_reference_count[-1] + 1
+						print "block num:", `block_number`, "last ref count num:", `blocks_reference_count[-1]`, "new:", `new_block_number`
+						block_count_flag = True
+					if block_count_flag:
 						# crazy tuple adjust function
+						print "fix it", `gene`
 						gene_len = len(gene) - 1
 						if gene_len == 5:
 							gene = ( blocks_reference[block_number], gene[1], gene[2], gene[3], gene[4], gene[5] )
+							print "block num gene mod - 5"
 						elif gene_len == 4:
 							gene = ( blocks_reference[block_number], gene[1], gene[2], gene[3], gene[4] )
+							print "block num gene mod - 4"
 						elif gene_len == 3:
 							gene = ( blocks_reference[block_number], gene[1], gene[2], gene[3] )
+							print "block num gene mod - 3"
 						else:
 							print "fail:", gene_len
 							sys.exit()
-						print "why not", `gene`
-						blocks_reference[block_number] = gene[0]
-						blocks_reference_count.append(gene[0])
-					else:
-						blocks_reference[block_number] = gene[0]
-						blocks_reference_count.append(gene[0])
+						print "better?", `gene`
+						block_count_flag = False
+						#gene[0] = blocks_reference[block_number]
+	#					print "do it", `gene`
+	#					if gene[0] in blocks_reference_count:
+	#						# this should make sure we advance the number
+	#						blocks_reference_count.sort()
+	#						new_block_number = blocks_reference_count[-1] + 1
+	#
+	#						blocks_reference[block_number] = new_block_number
+	#						# crazy tuple adjust function
+	#						gene_len = len(gene) - 1
+	#						if gene_len == 5:
+	#							gene = ( blocks_reference[block_number], gene[1], gene[2], gene[3], gene[4], gene[5] )
+	#							print "bad gene mod 2 - 5"
+	#						elif gene_len == 4:
+	#							gene = ( blocks_reference[block_number], gene[1], gene[2], gene[3], gene[4] )
+	#							print "bad gene mod 2 - 4"
+	#						elif gene_len == 3:
+	#							gene = ( blocks_reference[block_number], gene[1], gene[2], gene[3] )
+	#							print "bad gene mod 2 - 3"
+	#						else:
+	#							print "fail:", gene_len
+	#							sys.exit()
+	#						print "why not", `gene`
+	#						blocks_reference[block_number] = gene[0]
+	#						blocks_reference_count.append(gene[0])
+	#					else:
+	#						blocks_reference[block_number] = gene[0]
+	#						blocks_reference_count.append(gene[0])
+					blocks_reference[block_number] = gene[0]
+					blocks_reference_count.append(gene[0])
 				
 				# genero flag
 				#print "test1- no! -", `offset`
@@ -422,7 +582,9 @@ def breedParents(breeders, flock, seeds, generation, mutation_chances, possible_
 			#
 			##########
 			child.blocks.sort()
-			print `blocks_reference`
+			#print `blocks_reference`
+			for block_line in blocks_reference:
+				print `block_line`, blocks_reference[block_line]
 			print `child.blocks`
 			child.writeFile(seeds, generation, presets_directory, pretend)
 #			print "writeChildPreset_exp(" + child.file, seeds, generation, presets_directory, `pretend` + ")"
@@ -444,16 +606,22 @@ for dir in split_dirs:
 		full_list.append(dir + file)
 print "list generated"
 
+# find the current number of presets to give our secondary count starting number.
 count = 0
 for file in full_list:
 	flock[count] = GeneticMlib.Evolver(file, False)
-#	flock[count].readFile(False)
 	count += 1
 
+# Return "This" Generation's number
 generation = checkGeneration(flock)
 
+# find the last surviving generation
 too_old = generation - lifespan
 
+# select the breeders from the pool and return them in a dictionary of lists:
+#  { primary_parent: [ child1,
+#			child2,
+#			child3...  ]
 breeders = selectBreeders(count, children, possible_parents, too_old, flock)
 
 #print breeders

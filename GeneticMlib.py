@@ -58,6 +58,9 @@ any_val = { 'min':None, 'max':None, 'type':'int' }
 
 any_point_val = { 'min':None, 'max':None, 'type':'float' }
 
+# ignore type for excluding lines from being changed
+ignore = { 'min':None, 'max':None, 'type':'ignore' }
+
 projectm_genes = { \
 	\
 	'fWarpScale':greater_than_point_zero, \
@@ -128,7 +131,9 @@ projectm_shape_genes = { \
 			\
 			'sides':three_to_onehundred, \
 			\
-			'tex_zoom':greater_than_zero
+			'tex_zoom':greater_than_zero, \
+			\
+			'ImageURL':ignore
 }
 
 # this isn't really complete, but should do for now
@@ -332,7 +337,7 @@ class Evolver:
 		Now files are read in order, meaning the order of lines is no longer completely
 		randomized every time, instead that is part of the new DNA mutation code"""
 		file = self.file
-#		print file
+		print file
 		try:
 			file = open(file, 'r')
 		except:
@@ -382,6 +387,11 @@ class Evolver:
 #				line = '0'
 #			if line == '':
 #				line = '0'
+
+			if self.order.has_key(gene):
+				print "duplicate! skipping", `gene`
+				continue
+
 			self.order_count += 1
 			self.order[gene] = self.order_count
 			#print `self.order`
@@ -590,7 +600,7 @@ class Evolver:
 						# set this as a block gene
 						# type = init or script
 						# value is a tuple: number, order number, wave or shape, type, sub-gene, value (or parser list)
-						print "add1", `order_number`, `gene_parts`, "init"
+						#print "add1", `order_number`, `gene_parts`, "init"
 						if not current_block_gene == (gene_parts[1],  gene_parts[0]):
 							current_block_gene = (gene_parts[1],  gene_parts[0])
 							self.blocks_chunk_count += 1
@@ -643,7 +653,16 @@ class Evolver:
 						# set this as a block gene
 						# type = init or script
 						# value is a tuple: number, order number, wave or shape, type, sub-gene, value (or parser list)
-						print "add2", `order_number`, `gene_parts`, "init"
+						#print "add2", `order_number`, `gene_parts`, "init"
+						if not current_block_gene == (gene_parts[1],  gene_parts[0]):
+							current_block_gene = (gene_parts[1],  gene_parts[0])
+							self.blocks_chunk_count += 1
+						self.blocks.append( ( self.blocks_chunk_count, order_number, int(gene_parts[1]), gene_parts[0], 'init', gene_parts[2]) )
+						self.blocks_content[( int(gene_parts[1]), gene_parts[0], 'init', gene_parts[2])] = line
+						continue
+					# ignore types, do not change in any way
+					elif gene_check[gene_parts[2]]['type'] == 'ignore':
+						# adding the gene without checking or modifying in any way
 						if not current_block_gene == (gene_parts[1],  gene_parts[0]):
 							current_block_gene = (gene_parts[1],  gene_parts[0])
 							self.blocks_chunk_count += 1
@@ -819,14 +838,14 @@ class Evolver:
 #			print gene_parts
 #			print gene_parts.index(gene_parts[-1])
 			if gene_parts.index(gene_parts[-1]) == 1:
-				print "add3", `order_number`, `gene_parts`, "post-script"
+				#print "add3", `order_number`, `gene_parts`, "post-script"
 				if not current_block_gene == gene_parts[0]:
 					current_block_gene = gene_parts[0]
 					self.blocks_chunk_count += 1
 				self.blocks.append( ( self.blocks_chunk_count, int(gene_parts[1]), gene_parts[0], 'post-script') )
 				self.blocks_content[( int(gene_parts[1]), gene_parts[0], 'post-script')] = eq_dna
 			else:
-				print "add4", `order_number`, `gene_parts`, "script"
+				#print "add4", `order_number`, `gene_parts`, "script"
 				if not current_block_gene == (int(gene_parts[1]), gene_parts[0]):
 					current_block_gene = (int(gene_parts[1]), gene_parts[0])
 					self.blocks_chunk_count += 1
@@ -1200,6 +1219,9 @@ class Evolver:
 					print "14-", `gene`
 					self.blocks_content[gene] = new_number
 #				print "done with crappy float fix loop"
+			elif gene_check[gene]['type'] == 'ignore':
+				# do nothing
+				pass
 			else:
 				print "what?"
 				print gene
