@@ -133,7 +133,15 @@ projectm_shape_genes = { \
 			\
 			'tex_zoom':greater_than_zero, \
 			\
-			'ImageURL':ignore
+			'ImageURL':ignore, \
+			\
+			'num_inst':greater_than_zero \
+}
+# num_inst for pixel shaders
+
+# pixel shader fun, these vars have something to do with the pixel shaders, I'm not sure what
+projectm_pixel_shader_genes = { \
+				'ed':zero_to_one, 'n':zero_to_one, 'x':zero_to_one \
 }
 
 # this isn't really complete, but should do for now
@@ -374,6 +382,12 @@ class Evolver:
 				continue
 			if sre.match('\[preset.*', line):
 				continue
+			# more ignores for pixel shaders - this ignore section should be made pretty one day
+			if sre.match('MILKDROP_PRESET_VERSION.*', line):
+				continue
+			if sre.match('PSVERSION.*',line):
+				continue
+			# end pixel shader ignores
 			gene, line = sre.split('=', line, 1)
 #			gene = line[0]
 #			line = line[1]
@@ -531,6 +545,13 @@ class Evolver:
 				order_number = self.blocks_order_count
 				#order_number = 5
 				flag = True
+			# pixel shader "block"
+			elif sre.match('^b[0-9].*', gene):
+				type_flag = 'pixel shader'
+				gene_check = projectm_pixel_shader_genes
+				self.blocks_order_count += 1
+				order_number = self.blocks_order_count
+				flag = True
 			else:
 				flag = False
 #				if sre.match(wavecode_check, gene):
@@ -549,7 +570,14 @@ class Evolver:
 			# wavecode and shapecode section
 			# this is for init style genes
 			if flag:
-				gene_parts = gene.split('_', 2)
+				#print `gene`
+				if type_flag == 'pixel shader':
+					# cheating for now, this just chops off the first two characters, i.e. b#
+					# this will fail if we ever have 10 or more pixel shaders
+					gene_parts = [ gene[:1], gene[1:2], gene[2:] ]
+				else:
+					gene_parts = gene.split('_', 2)
+				#print `gene_parts`
 				if gene_check.has_key(gene_parts[2]):
 #					print "guh?", gene_parts
 					# a predefined sub-gene
@@ -702,6 +730,7 @@ class Evolver:
 			else:
 				# must be per_pixel, per_frame, or per_frame_init
 				flag = False
+			pixel_shader_flag = False
 			if flag:
 				# these are part of "blocks" still
 				# ok, all these lines are "script types"
@@ -779,62 +808,33 @@ class Evolver:
 				order_number = self.blocks_order_count
 				#order_number = 'c'
 				gene_parts = [ gene[:9], number ]
+			# pixel shader blocks here
+			# for now this does nothing except pass them along unmodified as an entire block
+			elif gene[:4] == 'comp':
+				number = gene[5:]
+				self.blocks_order_count += 1
+				order_number = self.blocks_order_count
+				gene_parts = [ gene[:4], number ]
+				pixel_shader_flag = True
+			elif gene[:4] == 'warp':
+				number = gene[5:]
+				self.blocks_order_count += 1
+				order_number = self.blocks_order_count
+				gene_parts = [ gene[:4], number ]
+				pixel_shader_flag = True
+			# end pixel shader stuff
 			else:
 				print "this shouldn't happen 4"
 				print gene
 				print gene_parts
 				print sys.exit()
 
-# remove these tests, all equations are treated as such now
-#			# ok, now it's the "line" needs to be checked
-#			# start script tests here
-#			try:
-#				tline = int(line)
-#				# we've got an intiger
-##				self.tree[gene].append(line)
-#				if gene_parts.index(gene_parts[-1]) == 1:
-#					# per_pixel, and per_frame, per_frame_init
-#					# 
-#					self.blocks.append( ( order_number, gene_parts[1], gene_parts[0], 'post-script') )
-#					self.blocks_content[( order_number, gene_parts[1], gene_parts[0], 'post-script')] = line
-#				else:
-#					self.blocks.append( ( gene_parts[1], order_number, sub_number, 'script', gene_parts[0], gene_parts[2]) )
-#					self.blocks_content[( gene_parts[1], order_number, sub_number, 'script', gene_parts[0], gene_parts[2])] = line
-#				continue
-#			except:
-#				pass
-##			print line
-#			if sre.match(number_only, line):
-#			# we've got a number only, lets check for a float
-#				try:
-#					tline = float(line)
-#					# it's a float!
-##					self.tree[gene].append(line)
-#					if gene_parts.index(gene_parts[-1]) == 1:
-#						self.blocks.append( ( order_number, gene_parts[1], gene_parts[0], 'post-script') )
-#						self.blocks_content[( order_number, gene_parts[1], gene_parts[0], 'post-script')] = line
-#					else:
-#						self.blocks.append( ( gene_parts[1], order_number, sub_number, 'script', gene_parts[0], gene_parts[2]) )
-#						self.blocks_content[( gene_parts[1], order_number, sub_number, 'script', gene_parts[0], gene_parts[2])] = line
-#					continue
-#				except:
-#					# it's some other number
-#					# shouldn't this never happen?
-##					self.tree[gene].append(line)
-#					print "what the fuck is this?"
-#					print gene
-#					print line
-#					if gene_parts.index(gene_parts[-1]) == 1:
-#						self.blocks.append( ( order_number, gene_parts[1], gene_parts[0], 'post-script', line ) )
-#						self.blocks_content[( order_number, gene_parts[1], gene_parts[0], 'post-script')] = line
-#					else:
-#						self.blocks.append( ( gene_parts[1], order_number, sub_number, 'script', gene_parts[0], gene_parts[2]) )
-#						self.blocks_content[( gene_parts[1], order_number, sub_number, 'script', gene_parts[0], gene_parts[2])] = line
-#					continue
-#			# looks like it's not anything simple
-#			# therefor it's an equation, run it through the parser
-#			self.tree[gene] = self.parser(line, verbose)
-			eq_dna = self.parser(line, verbose)
+			# don't touch the pixel shader stuff, it's all crazy
+			if pixel_shader_flag:
+				eq_dna = line
+			else:
+				# not a pixel shader, parse that equation
+				eq_dna = self.parser(line, verbose)
 #			print gene_parts
 #			print gene_parts.index(gene_parts[-1])
 			if gene_parts.index(gene_parts[-1]) == 1:
@@ -842,8 +842,12 @@ class Evolver:
 				if not current_block_gene == gene_parts[0]:
 					current_block_gene = gene_parts[0]
 					self.blocks_chunk_count += 1
-				self.blocks.append( ( self.blocks_chunk_count, int(gene_parts[1]), gene_parts[0], 'post-script') )
-				self.blocks_content[( int(gene_parts[1]), gene_parts[0], 'post-script')] = eq_dna
+				if pixel_shader_flag:
+					self.blocks.append( ( self.blocks_chunk_count, int(gene_parts[1]), gene_parts[0], 'pixel shader') )
+					self.blocks_content[( int(gene_parts[1]), gene_parts[0], 'pixel shader')] = eq_dna
+				else:
+					self.blocks.append( ( self.blocks_chunk_count, int(gene_parts[1]), gene_parts[0], 'post-script') )
+					self.blocks_content[( int(gene_parts[1]), gene_parts[0], 'post-script')] = eq_dna
 			else:
 				#print "add4", `order_number`, `gene_parts`, "script"
 				if not current_block_gene == (int(gene_parts[1]), gene_parts[0]):
@@ -964,9 +968,20 @@ class Evolver:
 				if full_line == [] or full_line == "[]":
 					full_line = ''
 				file.write(gene + '=' + full_line + '\n')
+			elif line[3] == 'pixel shader':
+				#print "here", `line`
+				gene = line[2] + '_' + `line[1]`
+				full_line = self.blocks_content[ line[1:] ]
+				if not a == type(full_line):
+					full_line = `full_line`
+				file.write(gene + '=' + full_line + '\n')
 			elif line[4] == 'init':
 				#print `line`, line[3], line[2], line[5]
-				gene = line[3] + '_' + `line[2]` + '_' + line[5]
+				# shitty bandaid fix to pixel shaders - I'll regret this later
+				if line[3] == "b":
+					gene = line[3] + `line[2]` + line[5]
+				else:
+					gene = line[3] + '_' + `line[2]` + '_' + line[5]
 				full_line = ''
 #				print gene, full_line
 #				for part in self.blocks_content[line]:
@@ -1147,6 +1162,8 @@ class Evolver:
 				gene_check = projectm_wave_genes
 			elif entry_gene[3] == 'shapecode':
 				gene_check = projectm_shape_genes
+			elif entry_gene[3] == 'b':
+				gene_check = projectm_pixel_shader_genes
 			else:
 				print "crap, i dones it again"
 				print entry_gene
@@ -1159,6 +1176,9 @@ class Evolver:
 			type_flag = 'not_block'
 			gene = entry_gene
 			gene_check = projectm_genes
+		elif type == 'pixel shader':
+			# do not mutate
+			return
 		else:
 			print "what the fuck did i do now?"
 			print type

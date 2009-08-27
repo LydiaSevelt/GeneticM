@@ -7,7 +7,7 @@ import time, sys
 import GeneticMlib
 
 # preset directory to use, this should be fixed as something a bit more dynamic and configurable later
-presets_directory = '/home/adam/GeneticMcode3/test/'
+presets_directory = '/home/krylen/GeneticMcode3/test/'
 #presets_directory = '/etc/projectM/presets/:/etc/projectM/presets.orig/'
 
 # if set to less than 2 it will default to 2
@@ -15,7 +15,7 @@ presets_directory = '/home/adam/GeneticMcode3/test/'
 possible_parents = 2 
 
 # how many children to produce on each run through
-children = 1
+children = 25
 
 # how many generations does a preset live for?
 # dead presets will be omitted from the flock
@@ -177,6 +177,9 @@ def breedParents(breeders, flock, seeds, generation, mutation_chances, possible_
 			# start mixing
 #			dupes_list = []
 #			print `parent_one.tree`
+			# this is a terrible, no good, aweful, very bad hack
+			warp_flag = False
+			comp_flag = False
 			for gene in parent_one.tree:
 #				print "yo?", gene
 #				if gene in dupes_list:
@@ -238,13 +241,23 @@ def breedParents(breeders, flock, seeds, generation, mutation_chances, possible_
 				type_offset = 4
 				print "this is it", `gene`
 				if gene[3] == "post-script":
-					#                  per-frame      post-script
-					gene_block_number = gene[2] + "_" + gene[3]
+					#                  per-frame          0
+					gene_block_number = gene[2]
 					offset = 1
 					type_offset = 3
 				elif gene[3] == "script":
-					#                    wave              0               script         per_point
-					gene_block_number = gene[4] + "_" + `gene[1]` + "_" + gene[3] + "_" + gene[5]
+					#               wave or shape          0             per_point
+					gene_block_number = gene[4] + "_" + `gene[1]` + "_" + gene[5]
+					offset = 1
+					type_offset = 3
+				elif gene[3] == "pixel shader":
+					#                 warp or comp
+					gene_block_number = gene[2]
+					# this is a terrible, no good, aweful, very bad hack
+					if gene_block_number == "warp":
+						warp_flag = True
+					elif gene_block_number == "comp":
+						comp_flag = True
 					offset = 1
 					type_offset = 3
 				elif gene[4] == "init":
@@ -294,6 +307,7 @@ def breedParents(breeders, flock, seeds, generation, mutation_chances, possible_
 						new_block_number = blocks_reference_count[-1] + 1
 						print "block num:", `block_number`, "last ref count num:", `blocks_reference_count[-1]`, "new:", `new_block_number`
 						block_count_flag = True
+						blocks_reference[block_number] = gene[0]
 					if block_count_flag:
 						# crazy tuple adjust function
 						blocks_reference[block_number] = new_block_number
@@ -346,12 +360,17 @@ def breedParents(breeders, flock, seeds, generation, mutation_chances, possible_
 				# seriously cheaping out here to get stuff working now
 				if next_parent.blocks_content.has_key( gene[offset:] ):
 					which = random.randint(0, block_parent_weight)
-					if which >= weight:
+					# do not mix pixel shaders for now - parent one always wins
+					if gene[3] == "pixel shader":
 						child.blocks_content[ gene[offset:] ] = parent_one.blocks_content[ gene[offset:] ]
-						print "p1 win 1"
+						print "p1 win 1 - pixel shader"
 					else:
-						child.blocks_content[ gene[offset:] ] = next_parent.blocks_content[ gene[offset:] ]
-						print "p2 win 1"
+						if which >= weight:
+							child.blocks_content[ gene[offset:] ] = parent_one.blocks_content[ gene[offset:] ]
+							print "p1 win 1"
+						else:
+							child.blocks_content[ gene[offset:] ] = next_parent.blocks_content[ gene[offset:] ]
+							print "p2 win 1"
 					child.mutator(child.blocks_content[ gene[offset:] ], gene, mutation_chances, gene[type_offset], verbose)
 				
 					###########################################
@@ -460,18 +479,21 @@ def breedParents(breeders, flock, seeds, generation, mutation_chances, possible_
 				type_offset = 4
 				print "fixme", `gene`
 				if gene[3] == "post-script":
-					#                  per-frame      post-script
-					gene_block_number = gene[2] + "_" + gene[3]
+					#                  per-frame          0
+					gene_block_number = gene[2]
 					offset = 1
 					type_offset = 3
 				elif gene[3] == "script":
-					#                    wave              0               script         per_point
-					gene_block_number = gene[4] + "_" + `gene[1]` + "_" + gene[3] + "_" + gene[5]
+					#                wave or shape         0             per_point
+					gene_block_number = gene[4] + "_" + `gene[1]` +  "_" + gene[5]
+					offset = 1
+					type_offset = 3
+				elif gene[3] == "pixel shader":
+					#                 warp or comp
+					gene_block_number = gene[2]
 					offset = 1
 					type_offset = 3
 				elif gene[4] == "init":
-					# what?
-					pass
 					#                  wavecode            0              init
 					gene_block_number = gene[3] + "_" + `gene[2]` + "_" + gene[4]
 				else:
@@ -497,6 +519,7 @@ def breedParents(breeders, flock, seeds, generation, mutation_chances, possible_
 						new_block_number = blocks_reference_count[-1] + 1
 						print "block num:", `block_number`, "last ref count num:", `blocks_reference_count[-1]`, "new:", `new_block_number`
 						block_count_flag = True
+						blocks_reference[block_number] = gene[0]
 					if block_count_flag:
 						# crazy tuple adjust function
 						print "fix it", `gene`
@@ -548,11 +571,14 @@ def breedParents(breeders, flock, seeds, generation, mutation_chances, possible_
 				
 				# genero flag
 				#print "test1- no! -", `offset`
-				child.blocks_content[ gene[offset:] ] = next_parent.blocks_content[ gene[offset:] ]
-				child.mutator(child.blocks_content[ gene[offset:] ], gene, mutation_chances, gene[type_offset], verbose)
-				if not gene in child.blocks:
-					print "child add block 2", `gene`
-					child.blocks.append(gene)
+				# if it's a pixel shader we do not want to add extra lines from the secondary parent
+				# this is a terrible, no good, aweful, very bad hack
+				if (gene[2] == "warp" and warp_flag == False) or (gene[2] == "comp" and comp_flag == False):
+					child.blocks_content[ gene[offset:] ] = next_parent.blocks_content[ gene[offset:] ]
+					child.mutator(child.blocks_content[ gene[offset:] ], gene, mutation_chances, gene[type_offset], verbose)
+					if not gene in child.blocks:
+						print "child add block 2", `gene`
+						child.blocks.append(gene)
 #			if not parent_one.tree.has_key('blocks'):
 #				#rint "holy shit"
 #				print gene
@@ -603,7 +629,8 @@ for dir in split_dirs:
 	# ewwww, gross, this is *way* slower than extend
 	# fix this later, it sucks, especially when you have thousands and thousands of presets
 	for file in list:
-		full_list.append(dir + file)
+		if sre.match('GeneticM', file):
+			full_list.append(dir + file)
 print "list generated"
 
 # find the current number of presets to give our secondary count starting number.
