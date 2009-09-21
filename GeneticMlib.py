@@ -326,8 +326,8 @@ class Evolver:
 			[ """
 	
 
-	def __init__(self, file, verbose):
-		"""nothing here yet"""
+	def __init__(self, file, rating=False, verbose=False):
+		"""Fill me in with descriptive words"""
 		self.tree = {}
 		self.blocks_content = {}
 		self.blocks = []
@@ -339,6 +339,7 @@ class Evolver:
 		self.parents_order = []
 		self.file = file
 		self.parents_names = []
+		self.rating = rating
 	
 	def readFile(self, verbose):
 		"""This replaces readPresetFile, reading the file and returning it's 'DNA' string
@@ -1142,6 +1143,50 @@ class Evolver:
 	#			   new_line += ']'
 		return parsed_list
 	
+	def object_mutator(self, max_shapes, max_waves):
+		"""swap shapecode and wavecode numbers around with other shapecodes or wavecodes"""
+		# shapecode or wavecode?
+		if random.randint(0, 1) == 0:
+			# zero is shapecode
+			mutate_type = "shapecode"
+			mutate_type_script = "shape"
+			mutate_max = max_shapes
+		else:
+			# one is wavecode
+			mutate_type = "wavecode"
+			mutate_type_script = "wave"
+			mutate_max = max_waves
+		# pick two numbers
+		object_one = random.randint(0, mutate_max)
+		while True:
+			object_two = random.randint(0, mutate_max)
+			if not object_one == object_two:
+				break
+		print "object number swap:", object_one, object_two
+		# swap numbers
+		count = 0
+		for line in self.blocks:
+			if line[3] == mutate_type:
+				if line[2] == object_one:
+ 					new_line = (line[0], line[1], object_two, line[3], line[4], line[5])
+					self.blocks[count] = new_line
+					self.blocks_content[ new_line[2:] ] = self.blocks_content[ line[2:] ]
+				elif line[2] == object_two:
+					new_line = (line[0], line[1], object_one, line[3], line[4], line[5])
+					self.blocks[count] = new_line
+					self.blocks_content[ new_line[2:] ] = self.blocks_content[ line[2:] ]
+			elif line[3] == "script" and line[4] == mutate_type_script:
+				if line[1] == object_one:
+ 					new_line = (line[0], object_two, line[1], line[3], line[4], line[5])
+					self.blocks[count] = new_line
+					self.blocks_content[ new_line[1:] ] = self.blocks_content[ line[1:] ]
+				elif line[1] == object_two:
+					new_line = (line[0], object_one, line[2], line[3], line[4], line[5])
+					self.blocks[count] = new_line
+					self.blocks_content[ new_line[1:] ] = self.blocks_content[ line[1:] ]
+			count += 1
+		return
+
 	def mutator(self, line, entry_gene, mutation_chances, type, verbose):
 		"""decide what kind of line it is and mutate accordingly"""
 		mutate = random.randint(0, mutation_chances['mutation_chance'])

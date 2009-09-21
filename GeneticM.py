@@ -2,7 +2,11 @@
 
 import os, sre, random
 
+import re
+
 import time, sys
+
+import optparse
 
 import GeneticMlib
 
@@ -30,19 +34,106 @@ tree_parent_weight = 60
 # block parent line swapping weight
 block_parent_weight = 60
 
+# maximum allowed shapecodes via mutation
+max_shapecodes = 6
+
+# maximum allowed wavecodes via mutation
+max_wavecodes = 6
+
 # group all mutation chances into a single dictionary
-mutation_chances = { 
+mutation_chances = { \
 	# chance of mutation, chance is one out of #, zero means everytime
-	'mutation_chance':50, \
+	'mutation_chance':20, \
 	# chance of lesser mutations, chance is one out of #, zero means everytime
-	'lesser_mutation_chance':50, \
+	'lesser_mutation_chance':20, \
 	# chance of additions to equations (evaulation done on every element of an equation)
-	'addition_chance':50, \
+	'addition_chance':20, \
 	# chance of dropping the line entirly
 	'drop_chance':1000, \
 	# number of branches (between 1 and constructor) to be built for a function fill in
-	'constructor':3 \
-	}   
+	'constructor':6, \
+	# object code (shapecode and wavecode for now) renumbering, chance is one out of #, zero means everytime
+	'renumber':10 \
+	}
+
+# for breeding weights
+# can total to any number
+weighting_ranges = { \
+	# will not breed
+	1:None, \
+	# matches between 0 and 5
+	2:5, \
+	# matches between 0 and 15
+	3:15, \
+	# matches between 0 and 25
+	4:25, \
+	# matches between 0 and 65
+	5:65, \
+	# matches between 0 and 145
+	6:145 \
+	}
+
+##################
+#
+# for debugging
+#
+##################
+
+from IPython.Shell import IPShellEmbed
+
+ipshell = IPShellEmbed()
+
+#################
+#
+# end
+#
+#################
+
+class ProjectMPlaylist:
+	"""Project M Playlist Object"""
+	
+	def __init__(self, filename):
+		"""Fill me in with descriptive words"""
+		self.filename = filename
+		self.file_lines = []
+		self.flock = {}
+
+	def readFile(self):
+		"""Read in a playlist"""
+		try:
+			rawfile = open(self.filename, 'r')
+		except:
+			sys.exit('failed to open preset: ' + self.filename)
+		rawfile = rawfile.readlines()
+		count = 0
+		for line in rawfile:
+			linefile = re.search('/.[^>,<]*\.prjm', line)
+			if linefile == type([]):
+				sys.exit('Playlist file in wrong format, more than one preset per line')
+			if not linefile:
+				self.file_lines.append( [ line, None, None ] )
+				continue
+			# else...
+			rating = re.search('rating>\d\\n', line)
+			if not rating:
+				print `line`
+				print `rating`
+				sys.exit('Playlist file in wrong format, no rating on line that contains preset')
+			# else...
+			linefile = linefile.group()
+			rating = rating.group()[7:8]
+			try:
+				rating = int(rating)
+			except:
+				print `line`
+				print `rating`
+				sys.exit('Failure converting rating to an intiger!')
+			self.file_lines.append( [ line, linefile , rating ] )
+			self.flock[count] = GeneticMlib.Evolver(linefile, rating, False)
+			count += 1
+		self.total_presets = count
+
+# end ProjectMPlaylist class
 
 # basic function to check the directory for the format of generation-number and find the current generation, incrimenting for "this" generation
 # that wasn't a confusing sentance at all.
@@ -50,6 +141,7 @@ def checkGeneration(flock):
 	"""This checks to see what generation we are one and returns the next generation"""
 	current = 0
 	for count in flock:
+		#print `flock[count].file`
 		prjm_file = flock[count].file.split('/')
 		if sre.match('GeneticM', prjm_file[-1]):
 			parts = prjm_file[-1].split('-')
@@ -101,6 +193,75 @@ def selectBreeders(seeds, children, possible_parents, too_old, flock):
 			selections += 1
 			flag = True
 	return parents
+
+def selectBreeders2(seeds, children, possible_parents, too_old, flock):
+	"""Rewriting this function
+	
+	This takes in the flock and randomly selects #children presets to breed
+	This returns a dictionary of randomly selected presets pairs to breed"""
+	# subtrack one from the seeds, random.randint will otherwise end up with out of range vaules by one
+	seeds -= 1
+	parents = {} 
+	selections = 0
+	# find the list of available parents
+	available_parents = {}
+	actual_available_count = 0
+	for preset in flock:
+		#print `flock[preset].file`
+		prjm_file = flock[preset].file.split('/')
+		parts = prjm_file[-1].split('-')
+		try:
+			preset_generation = int(parts[1])
+		except:
+			print "File not an available parent:", prjm_file
+			continue
+		# too old?
+		if preset_generation < too_old:
+			continue
+		# rating 1 presets are not available for breeding
+		if not weighting_ranges[flock[preset].rating]:
+			print "Not available: ", preset
+			continue
+		available_parents[flock[preset].file] = True
+	# end find available parents list
+	# check to see we have enough parents to breed all requested children, if not fail
+	if len(available_parents) < children:
+		print "Not enough parents (" + `len(available_parents)` + ") to breed " + `children` + " children."
+		sys.exit('add more available parents or breed less children...  extinction is a bitch.')
+
+	# we have enough children so lets pick them
+	parents = {} 
+	selections = 0
+	flag = True
+	while selections < children:
+		num_parents = random.randint(2, possible_parents)
+		count = 0
+		while count < num_parents:
+			breeder = random.randint(0, seeds)
+			if parents.has_key(breeder):
+				continue
+			# check to see if this is a valid parent
+			if not available_parents.has_key(flock[breeder].file):
+				continue
+			# weighting - drop some presets based on their weighted downness
+			# yeah, this is a terrible way to do it, I'll fix it later
+			#if weighting_ranges[flock[breeder].rating] <= random.randint(0, weighting_ranges[6]):
+			weight_test = random.randint(0, weighting_ranges[6])
+			if weighting_ranges[flock[breeder].rating] <= weight_test:
+				print "rejected for weight:", breeder, flock[breeder].rating, weighting_ranges[flock[breeder].rating], weight_test
+				continue
+			if count == 0:
+				main_parent = breeder
+				parents[main_parent] = [ breeder ]
+				count += 1
+				continue
+			if not main_parent == breeder:
+				print "success:", breeder, flock[breeder].rating, weighting_ranges[flock[breeder].rating], weight_test
+				parents[main_parent].append(breeder)
+				count += 1
+		selections += 1
+	return parents
+
 
 def breedParents(breeders, flock, seeds, generation, mutation_chances, possible_parents, presets_directory, pretend, verbose):
 	"""This takes the dictionary of pairs and breeds them together
@@ -602,7 +763,11 @@ def breedParents(breeders, flock, seeds, generation, mutation_chances, possible_
 			#
 			# child post-processing block
 			#
-			
+			#ipshell()
+
+			if random.randint(0, 100) < mutation_chances["renumber"]:
+				child.object_mutator(max_wavecodes, max_shapecodes)
+
 			#
 			# end child post-processing block
 			#
@@ -616,44 +781,81 @@ def breedParents(breeders, flock, seeds, generation, mutation_chances, possible_
 #			print "writeChildPreset_exp(" + child.file, seeds, generation, presets_directory, `pretend` + ")"
 	return
 
-print "testing only for now"
+def main():
+	"""This is a hulking piece of crap
+	Legacy code that will hopefully go away someday soon"""
+	
+	if options.playlist_file:
+		playlist = ProjectMPlaylist(options.playlist_file)
+		playlist.readFile()
+		
+		# Return "This" Generation's number
+		generation = checkGeneration(playlist.flock)
 
-flock = {}
-full_list = []
-split_dirs = presets_directory.split(':')
-main_dir = split_dirs[0]
-for dir in split_dirs:
-	list = os.listdir(dir)
-#	list = list.split('\n')
-#	full_list.extend(list)
-	# ewwww, gross, this is *way* slower than extend
-	# fix this later, it sucks, especially when you have thousands and thousands of presets
-	for file in list:
-		if sre.match('GeneticM', file):
-			full_list.append(dir + file)
-print "list generated"
+		# find the last surviving generation
+		too_old = generation - lifespan
 
-# find the current number of presets to give our secondary count starting number.
-count = 0
-for file in full_list:
-	flock[count] = GeneticMlib.Evolver(file, False)
-	count += 1
+		# select the breeders from the pool and return them in a dictionary of lists:
+		#  { primary_parent: [ child1,
+		#			child2,
+		#			child3...  ]
+		breeders = selectBreeders2(playlist.total_presets, children, possible_parents, too_old, playlist.flock)
 
-# Return "This" Generation's number
-generation = checkGeneration(flock)
+		#print breeders
+		#for file in flock:
 
-# find the last surviving generation
-too_old = generation - lifespan
+		breedParents(breeders, playlist.flock, playlist.total_presets, generation, mutation_chances, possible_parents, presets_directory, False, False)
 
-# select the breeders from the pool and return them in a dictionary of lists:
-#  { primary_parent: [ child1,
-#			child2,
-#			child3...  ]
-breeders = selectBreeders(count, children, possible_parents, too_old, flock)
+		print "new ok"
 
-#print breeders
-#for file in flock:
+	else:
+		# old shit code
+		flock = {}
+		full_list = []
+		split_dirs = presets_directory.split(':')
+		main_dir = split_dirs[0]
+		for dir in split_dirs:
+			list = os.listdir(dir)
+		#	list = list.split('\n')
+		#	full_list.extend(list)
+			# ewwww, gross, this is *way* slower than extend
+			# fix this later, it sucks, especially when you have thousands and thousands of presets
+			for file in list:
+				if sre.match('GeneticM', file):
+					full_list.append(dir + file)
+		print "list generated"
 
-breedParents(breeders, flock, count, generation, mutation_chances, possible_parents, main_dir, False, False)
+		# find the current number of presets to give our secondary count starting number.
+		count = 0
+		for file in full_list:
+			flock[count] = GeneticMlib.Evolver(file, False)
+			count += 1
 
-print "a-ok"
+		# Return "This" Generation's number
+		generation = checkGeneration(flock)
+
+		# find the last surviving generation
+		too_old = generation - lifespan
+
+		# select the breeders from the pool and return them in a dictionary of lists:
+		#  { primary_parent: [ child1,
+		#			child2,
+		#			child3...  ]
+		breeders = selectBreeders(count, children, possible_parents, too_old, flock)
+
+		#print breeders
+		#for file in flock:
+
+		breedParents(breeders, flock, count, generation, mutation_chances, possible_parents, main_dir, False, False)
+
+		print "a-ok"
+	return
+
+if not sre.match(".*pydoc$", sys.argv[0]):
+	# option parsing with optparse
+	opts_parser = optparse.OptionParser("usage: %prog [options]")
+	opts_parser.add_option("-l", "--playlist", dest="playlist_file", default=False, help="Specify the playlist file to use")
+	options, args = opts_parser.parse_args()
+	# run the main loop
+	main()
+
