@@ -61,6 +61,9 @@ any_point_val = { 'min':None, 'max':None, 'type':'float' }
 # ignore type for excluding lines from being changed
 ignore = { 'min':None, 'max':None, 'type':'ignore' }
 
+# images special, for lots of numbered images
+images = { 'min':1, 'max':157, 'type':'images' }
+
 projectm_genes = { \
 	\
 	'fWarpScale':greater_than_point_zero, \
@@ -137,6 +140,8 @@ projectm_shape_genes = { \
 			\
 			'num_inst':greater_than_zero \
 }
+			#'ImageURL':ignore, \
+			#'ImageURL':images, \
 # num_inst for pixel shaders
 
 # pixel shader fun, these vars have something to do with the pixel shaders, I'm not sure what
@@ -698,8 +703,17 @@ class Evolver:
 						self.blocks.append( ( self.blocks_chunk_count, order_number, int(gene_parts[1]), gene_parts[0], 'init', gene_parts[2]) )
 						self.blocks_content[( int(gene_parts[1]), gene_parts[0], 'init', gene_parts[2])] = line
 						continue
+					# special for many images mutation
+					elif gene_check[gene_parts[2]]['type'] == 'images':
+						# adding the gene without checking or modifying in any way
+						if not current_block_gene == (gene_parts[1],  gene_parts[0]):
+							current_block_gene = (gene_parts[1],  gene_parts[0])
+							self.blocks_chunk_count += 1
+						self.blocks.append( ( self.blocks_chunk_count, order_number, int(gene_parts[1]), gene_parts[0], 'init', gene_parts[2]) )
+						self.blocks_content[( int(gene_parts[1]), gene_parts[0], 'init', gene_parts[2])] = line
+						continue
 					else:
-						print "this shouldn't happen 2"
+						print "this shouldn't happen 2 - images"
 						print gene
 						print gene_parts[2]
 						print gene_check[gene_parts[2]]['type']
@@ -1143,6 +1157,59 @@ class Evolver:
 	#			   new_line += ']'
 		return parsed_list
 	
+	def equation_swapping_mutator(self, max_swaps):
+		"""swap equations for scripts"""
+		swaps = random.randint(0, max_swaps)
+		count = 0
+		# build list of swappable lines
+		swapables = {}
+		for line in self.blocks:
+			if line[3] == 'script' or line[3] == 'post-script':
+				swapables[line] = self.blocks_content[ line[1:] ]
+		# make all swaps happen
+		while count < swaps:
+			# pick two different lines from the swappable lines
+			line_one = random.choice(swapables.keys())
+			line_two = line_one
+			while line_one == line_two:
+				line_two = random.choice(swapables.keys())
+			# what kind of swap, pre equal sign, or post?
+			# True is post equal sign
+			if random.randint(0, 1):
+				# This makes more better change
+				try:
+					#print 'equal swap 1'
+					# store the equaled variables
+					line_one_var = swapables[line_one][0]
+					line_two_var = swapables[line_two][0]
+					#print 'equal swap 2'
+					# swap the two lines
+					self.blocks_content[ line_one[1:] ] = swapables[line_two]
+					self.blocks_content[ line_two[1:] ] = swapables[line_one]
+					#print 'equal swap 3'
+					# set back the equaled variables
+					self.blocks_content[ line_one[1:] ][0] = line_one_var
+					self.blocks_content[ line_two[1:] ][0] = line_two_var
+					#print 'equal swap'
+					# success, finish up loop
+					count += 1
+					continue
+				except:
+					# failure sends you to pre equal swapping
+					# This will happen if one or both lines are blank
+					#from IPython.Shell import IPShellEmbed
+					#ipshell = IPShellEmbed()
+					#ipshell()
+					pass
+			# False is pre equal sign - will also arrive here if post equal fails
+			# just swap contents straight up.
+			#print 'line_one', `line_one`, `swapables[line_one]`
+			#print 'line_two', `line_two`, `swapables[line_two]`
+			self.blocks_content[ line_one[1:] ] = swapables[line_two]
+			self.blocks_content[ line_two[1:] ] = swapables[line_one]
+			count += 1
+		return
+
 	def object_mutator(self, max_shapes, max_waves):
 		"""swap shapecode and wavecode numbers around with other shapecodes or wavecodes"""
 		# shapecode or wavecode?
@@ -1287,6 +1354,10 @@ class Evolver:
 			elif gene_check[gene]['type'] == 'ignore':
 				# do nothing
 				pass
+			# special many images mutation
+			elif gene_check[gene]['type'] == 'images':
+				# select new image number
+				self.blocks_content[gene] = `random.randint(gene_check[gene]['min'], gene_check[gene]['max'])` + '.tga'
 			else:
 				print "what?"
 				print gene
@@ -1676,7 +1747,9 @@ class Evolver:
 	def addition_mutator(self, branch, new_equation, verbose):
 		"""This creates a new branch of equation to be added to an equation being mutated"""
 		# this is still really really really basic code
-		verbose = False
+		verbose = True
+		if verbose:
+			print "orig_equation:", `new_equation`
 		type = random.randint(0,2)
 		if type == 0:
 			type_flag = 'number'
@@ -1726,6 +1799,8 @@ class Evolver:
 	#		   new_operator = operator_mutation(' ')
 	#		   new_equation.append(branch[0], new_operator, 'operator')
 	#	   new_function = variable_mutation('zoom')
-			type_flag = False 
+			type_flag = False
+		if verbose:
+			print "new_equation:", `new_equation`
 		return (new_equation, type_flag)
 

@@ -35,17 +35,20 @@ tree_parent_weight = 60
 block_parent_weight = 60
 
 # maximum allowed shapecodes via mutation
-max_shapecodes = 6
+max_shapecodes = 10
 
 # maximum allowed wavecodes via mutation
 max_wavecodes = 6
+
+# maximum allowed swaps in a single equation swap mutation
+max_swaps = 4
 
 # group all mutation chances into a single dictionary
 mutation_chances = { \
 	# chance of mutation, chance is one out of #, zero means everytime
 	'mutation_chance':20, \
 	# chance of lesser mutations, chance is one out of #, zero means everytime
-	'lesser_mutation_chance':20, \
+	'lesser_mutation_chance':30, \
 	# chance of additions to equations (evaulation done on every element of an equation)
 	'addition_chance':20, \
 	# chance of dropping the line entirly
@@ -53,7 +56,9 @@ mutation_chances = { \
 	# number of branches (between 1 and constructor) to be built for a function fill in
 	'constructor':6, \
 	# object code (shapecode and wavecode for now) renumbering, chance is one out of #, zero means everytime
-	'renumber':10 \
+	'renumber':30, \
+	# chance of swapping two equations
+	'equation_mixer':30 \
 	}
 
 # for breeding weights
@@ -106,31 +111,65 @@ class ProjectMPlaylist:
 			sys.exit('failed to open preset: ' + self.filename)
 		rawfile = rawfile.readlines()
 		count = 0
+		breed_flag = False
 		for line in rawfile:
-			linefile = re.search('/.[^>,<]*\.prjm', line)
-			if linefile == type([]):
-				sys.exit('Playlist file in wrong format, more than one preset per line')
-			if not linefile:
-				self.file_lines.append( [ line, None, None ] )
+			# skip this section if looking for breedability
+			if not breed_flag:
+				linefile = re.search('/.[^>,<]*\.prjm', line)
+				if linefile == type([]):
+					sys.exit('Playlist file in wrong format, more than one preset per line')
+				if not linefile:
+					self.file_lines.append( [ line, None, None ] )
+					continue
+				breed_flag = True
 				continue
 			# else...
-			rating = re.search('rating>\d\\n', line)
-			if not rating:
-				print `line`
-				print `rating`
-				sys.exit('Playlist file in wrong format, no rating on line that contains preset')
+			
+			###
+			#
+			# start new breedability
+
+			# skip this section
+			if breed_flag:
+				breedability = re.search('breedability>\d\\n', line)
+				if not breedability:
+					print `line`
+					print `breedability`
+					sys.exit('Playlist file in wrong format, no breedability on line that follows preset line')
+			
+			
+			# end breedability
+			# 
+			###
+
+			####
+			#
+			# old rating format
+			#rating = re.search('rating>\d\\n', line)
+			#if not rating:
+			#	print `line`
+			#	print `rating`
+			#	sys.exit('Playlist file in wrong format, no rating on line that contains preset')
+			#
+			# end old rating format
+
 			# else...
 			linefile = linefile.group()
-			rating = rating.group()[7:8]
+			#rating = rating.group()[7:8]
+			breedability = breedability.group()[13:14]
 			try:
-				rating = int(rating)
+				#rating = int(rating)
+				breedability = int(breedability)
 			except:
 				print `line`
-				print `rating`
-				sys.exit('Failure converting rating to an intiger!')
-			self.file_lines.append( [ line, linefile , rating ] )
-			self.flock[count] = GeneticMlib.Evolver(linefile, rating, False)
+				print `breedability`
+				sys.exit('Failure converting breedability to an intiger!')
+			#self.file_lines.append( [ line, linefile , rating ] )
+			#self.flock[count] = GeneticMlib.Evolver(linefile, rating, False)
+			self.file_lines.append( [ line, linefile , breedability ] )
+			self.flock[count] = GeneticMlib.Evolver(linefile, breedability, False)
 			count += 1
+			breed_flag = False
 		self.total_presets = count
 
 # end ProjectMPlaylist class
@@ -322,6 +361,7 @@ def breedParents(breeders, flock, seeds, generation, mutation_chances, possible_
 			child.parents_names.append(flock[parent].file)
 			time.sleep(.1)
 			next_parent = flock[parent]
+			print parent
 			flock[parent].readFile(False)
 			#print "two:", `flock[parent].blocks`
 #			dupes_list = []
@@ -763,10 +803,15 @@ def breedParents(breeders, flock, seeds, generation, mutation_chances, possible_
 			#
 			# child post-processing block
 			#
-			#ipshell()
-
+			
+			# object numbering mutator
 			if random.randint(0, 100) < mutation_chances["renumber"]:
 				child.object_mutator(max_wavecodes, max_shapecodes)
+
+			#ipshell()
+			# equation swapper code
+			if random.randint(0, 100) < mutation_chances["equation_mixer"]:
+				child.equation_swapping_mutator(max_swaps)
 
 			#
 			# end child post-processing block
