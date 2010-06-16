@@ -46,7 +46,7 @@ max_swaps = 4
 # group all mutation chances into a single dictionary
 mutation_chances = { \
 	# chance of mutation, chance is one out of #, zero means everytime
-	'mutation_chance':20, \
+	'mutation_chance':50, \
 	# chance of lesser mutations, chance is one out of #, zero means everytime
 	'lesser_mutation_chance':30, \
 	# chance of additions to equations (evaulation done on every element of an equation)
@@ -56,26 +56,46 @@ mutation_chances = { \
 	# number of branches (between 1 and constructor) to be built for a function fill in
 	'constructor':6, \
 	# object code (shapecode and wavecode for now) renumbering, chance is one out of #, zero means everytime
-	'renumber':30, \
+	'renumber':20, \
 	# chance of swapping two equations
-	'equation_mixer':30 \
+	'equation_mixer':20 \
+	}
+
+# special images mutation chances
+images_mutation_chances = { \
+	# chance of mutation, chance is one out of #, zero means everytime
+	'mutation_chance':1, \
+	# chance of lesser mutations, chance is one out of #, zero means everytime
+	'lesser_mutation_chance':30, \
+	# chance of additions to equations (evaulation done on every element of an equation)
+	'addition_chance':20, \
+	# chance of dropping the line entirly
+	'drop_chance':1000, \
+	# number of branches (between 1 and constructor) to be built for a function fill in
+	'constructor':6, \
+	# object code (shapecode and wavecode for now) renumbering, chance is one out of #, zero means everytime
+	'renumber':20, \
+	# chance of swapping two equations
+	'equation_mixer':20 \
 	}
 
 # for breeding weights
 # can total to any number
+# using the Fibonacci sequence because that's what nature does
+# starting at three instead of zero to make the lowest rating a little bit lower.
 weighting_ranges = { \
 	# will not breed
 	1:None, \
-	# matches between 0 and 5
-	2:5, \
-	# matches between 0 and 15
-	3:15, \
-	# matches between 0 and 25
-	4:25, \
-	# matches between 0 and 65
-	5:65, \
-	# matches between 0 and 145
-	6:145 \
+	# matches 3
+	2:3, \
+	# matches between 3 and 5
+	3:5, \
+	# matches between 3 and 8
+	4:8, \
+	# matches between 3 and 13
+	5:13, \
+	# matches between 3 and 21
+	6:21 \
 	}
 
 ##################
@@ -285,7 +305,8 @@ def selectBreeders2(seeds, children, possible_parents, too_old, flock):
 			# weighting - drop some presets based on their weighted downness
 			# yeah, this is a terrible way to do it, I'll fix it later
 			#if weighting_ranges[flock[breeder].rating] <= random.randint(0, weighting_ranges[6]):
-			weight_test = random.randint(0, weighting_ranges[6])
+			# weighting starts at three for Fibonacci sequence
+			weight_test = random.randint(3, weighting_ranges[6])
 			if weighting_ranges[flock[breeder].rating] <= weight_test:
 				print "rejected for weight:", breeder, flock[breeder].rating, weighting_ranges[flock[breeder].rating], weight_test
 				continue
@@ -572,7 +593,22 @@ def breedParents(breeders, flock, seeds, generation, mutation_chances, possible_
 						else:
 							child.blocks_content[ gene[offset:] ] = next_parent.blocks_content[ gene[offset:] ]
 							print "p2 win 1"
-					child.mutator(child.blocks_content[ gene[offset:] ], gene, mutation_chances, gene[type_offset], verbose)
+					if options.images:
+						# if images then change the mutation chances
+						image_flag = False
+						if gene[3] == 'shapecode':
+							# broken into two statments as some genes will not have element 5
+							if gene[5] == 'ImageURL':
+								image_flag = True
+								print "Images Mutation changes"
+								print "gene:", `gene`, offset
+								child.mutator(child.blocks_content[ gene[offset:] ], gene, images_mutation_chances, gene[type_offset], verbose, options.images)
+								print "set to: ", child.blocks_content[ gene[offset:] ]
+						if not image_flag:
+							# not an image gene, normal mutation
+							child.mutator(child.blocks_content[ gene[offset:] ], gene, mutation_chances, gene[type_offset], verbose)
+					else:
+						child.mutator(child.blocks_content[ gene[offset:] ], gene, mutation_chances, gene[type_offset], verbose)
 				
 					###########################################
 					#
@@ -617,7 +653,21 @@ def breedParents(breeders, flock, seeds, generation, mutation_chances, possible_
 				else:
 					# this secondary parent does not have this gene, add and/or mutate it
 					child.blocks_content[ gene[offset:] ] = parent_one.blocks_content[ gene[offset:] ]
-					child.mutator(child.blocks_content[ gene[offset:] ], gene, mutation_chances, gene[type_offset], verbose)
+					if options.images:
+						# if images then change the mutation chances
+						image_flag = False
+						if gene[3] == 'shapecode':
+							# broken into two statments as some genes will not have element 5
+							if gene[5] == 'ImageURL':
+								image_flag = True
+								print "Images Mutation changes"
+								child.mutator(child.blocks_content[ gene[offset:] ], gene, images_mutation_chances, gene[type_offset], verbose, options.images)
+								print "set to: ", child.blocks_content[ gene[offset:] ]
+						if not image_flag:
+							# not an image gene, normal mutation
+							child.mutator(child.blocks_content[ gene[offset:] ], gene, mutation_chances, gene[type_offset], verbose)
+					else:
+						child.mutator(child.blocks_content[ gene[offset:] ], gene, mutation_chances, gene[type_offset], verbose)
 
 					###########################################
 					#
@@ -829,7 +879,7 @@ def breedParents(breeders, flock, seeds, generation, mutation_chances, possible_
 def main():
 	"""This is a hulking piece of crap
 	Legacy code that will hopefully go away someday soon"""
-	
+
 	if options.playlist_file:
 		playlist = ProjectMPlaylist(options.playlist_file)
 		playlist.readFile()
@@ -900,6 +950,7 @@ if not sre.match(".*pydoc$", sys.argv[0]):
 	# option parsing with optparse
 	opts_parser = optparse.OptionParser("usage: %prog [options]")
 	opts_parser.add_option("-l", "--playlist", dest="playlist_file", default=False, help="Specify the playlist file to use")
+	opts_parser.add_option("-i", "--images", action="store_true", dest="images", default=False, help="Use images mode to mutate in images")
 	options, args = opts_parser.parse_args()
 	# run the main loop
 	main()

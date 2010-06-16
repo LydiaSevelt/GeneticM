@@ -52,6 +52,8 @@ three_to_onehundred = { 'min':3, 'max':100, 'type':'int' }
 
 zero_to_point_onehundred = { 'min':0, 'max':100, 'type':'float' }
 
+one_to_fiveonetwo = { 'min':1, 'max':512, 'type':'int' }
+
 one_to_twozerofoureight = { 'min':1, 'max':2048, 'type':'int' }
 
 any_val = { 'min':None, 'max':None, 'type':'int' }
@@ -62,7 +64,7 @@ any_point_val = { 'min':None, 'max':None, 'type':'float' }
 ignore = { 'min':None, 'max':None, 'type':'ignore' }
 
 # images special, for lots of numbered images
-images = { 'min':1, 'max':157, 'type':'images' }
+images = { 'min':1, 'max':5, 'type':'images' }
 
 projectm_genes = { \
 	\
@@ -117,7 +119,7 @@ projectm_wave_genes = { \
 			\
 			'scaling':greater_than_zero, 'scaling':greater_than_zero, \
 			\
-			'samples':one_to_twozerofoureight, \
+			'samples':one_to_fiveonetwo, \
 			\
 			'sep':negative_onehundred_to_onehundred \
 }
@@ -134,7 +136,7 @@ projectm_shape_genes = { \
 			\
 			'sides':three_to_onehundred, \
 			\
-			'tex_zoom':greater_than_zero, \
+			'tex_zoom':zero_to_point_two, \
 			\
 			'ImageURL':ignore, \
 			\
@@ -1254,7 +1256,7 @@ class Evolver:
 			count += 1
 		return
 
-	def mutator(self, line, entry_gene, mutation_chances, type, verbose):
+	def mutator(self, line, entry_gene, mutation_chances, type, verbose, images_flag=False):
 		"""decide what kind of line it is and mutate accordingly"""
 		mutate = random.randint(0, mutation_chances['mutation_chance'])
 		#print "is it me?"
@@ -1270,10 +1272,16 @@ class Evolver:
 		type_flag = 'block'
 		if type == 'init':
 			gene = entry_gene[5]
+			# block init offset is 2
+			full_gene = entry_gene[2:]
+			type_flag = 'block init'
 			if entry_gene[3] == 'wavecode':
 				gene_check = projectm_wave_genes
 			elif entry_gene[3] == 'shapecode':
 				gene_check = projectm_shape_genes
+				if images_flag:
+					# if images then change from "ignore" to "images" for ImageURL gene
+					gene_check['ImageURL'] = images
 			elif entry_gene[3] == 'b':
 				gene_check = projectm_pixel_shader_genes
 			else:
@@ -1304,27 +1312,39 @@ class Evolver:
 					if type == 'pre':
 						self.tree[gene] = `random.randint(gene_check[gene]['min'], gene_check[gene]['max'])`
 						print "11--", `gene`
-					else:
+					elif type == 'block':
 						print "11-", `gene`
 						self.blocks_content[gene] = `random.randint(gene_check[gene]['min'], gene_check[gene]['max'])`
+					else:
+						# type == 'block init'
+						print "11-", `gene`
+						self.blocks_content[full_gene] = `random.randint(gene_check[gene]['min'], gene_check[gene]['max'])`
 				elif gene_check[gene]['min'] and gene_check[gene]['min'] != 0:
 					# this can be any number greater than 0
 					# give the abs of good old integer mutation
 					if type == 'pre':
 						self.tree[gene] = `abs(int(self.integer_mutation(line)))`
 						print "12--", `gene`
-					else:
+					elif type == 'block':
 						print "12-", `gene`
 						self.blocks_content[gene] = `abs(int(self.integer_mutation(line)))`
+					else:
+						# type == 'block init'
+						print "12-", `gene`
+						self.blocks_content[full_gene] = `abs(int(self.integer_mutation(line)))`
 				else:
 					# any value goes here
 					# use traditional integer mutation
 					if type == 'pre':
 						self.tree[gene] = self.integer_mutation(line)
 						print "13--", `gene`
-					else:
+					elif type == 'block':
 						print "13-", `gene`
 						self.blocks_content[gene] = self.integer_mutation(line)
+					else:
+						# type == 'block init'
+						print "13-", `gene`
+						self.blocks_content[full_gene] = self.integer_mutation(line)
 				return
 			elif gene_check[gene]['type'] == 'float':
 				# this should probably get fixed at some point
@@ -1347,9 +1367,13 @@ class Evolver:
 				if type == 'pre':
 					self.tree[gene] = new_number
 					print "14--", `gene`
-				else:
+				elif type == 'block':
 					print "14-", `gene`
 					self.blocks_content[gene] = new_number
+				else:
+					# type == 'block init'
+					print "14-", `gene`
+					self.blocks_content[full_gene] = new_number
 #				print "done with crappy float fix loop"
 			elif gene_check[gene]['type'] == 'ignore':
 				# do nothing
@@ -1357,7 +1381,13 @@ class Evolver:
 			# special many images mutation
 			elif gene_check[gene]['type'] == 'images':
 				# select new image number
-				self.blocks_content[gene] = `random.randint(gene_check[gene]['min'], gene_check[gene]['max'])` + '.tga'
+				print "successful image mutate"
+				print "gene:", `gene`
+				# we know images are block init type, no need to check
+				self.blocks_content[full_gene] = `random.randint(gene_check[gene]['min'], gene_check[gene]['max'])` + '.tga'
+				print "image mutate new     :", `self.blocks_content[full_gene]`
+				for i in self.blocks_content:
+					print i
 			else:
 				print "what?"
 				print gene
