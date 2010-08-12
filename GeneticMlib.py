@@ -1,3 +1,26 @@
+# GeneticM
+# 
+# Organic beat-reactive digital art
+#
+# Grow Art
+#
+# Copyright (c) 2010 Adam Paterna <LinuxGuruGuy@gmail.com>
+#
+# This library is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Lesser General Public
+# License as published by the Free Software Foundation; either
+# version 2 of the License, or (at your option) any later version.
+#
+# This library is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# License along with this program; if not, write to the
+# Free Software Foundation, Inc., 59 Temple Place, Suite 330,
+# Boston, MA  02111-1307  USA
+
 import sre, sys, random
 
 # valid projectm operators
@@ -1697,8 +1720,12 @@ class Evolver:
 		# wow, this should really get more complex, or just be merged into the parser code
 		# but for now it seems best to break it out, still lots of special situations
 		# that arn't being considered
+		#
+		# ^I had no idea how the = thing worked before
+		# I *think* my line swapping code delt with this.
 		if operator == '=':
 			return operator
+		# what is below here in this fuction is stupid and wrong, I don't know why I'm leaving it here
 		#print "operator:", operator
 		new_operator = '='
 		while new_operator == '=':
@@ -1833,4 +1860,5 @@ class Evolver:
 		if verbose:
 			print "new_equation:", `new_equation`
 		return (new_equation, type_flag)
+
 
