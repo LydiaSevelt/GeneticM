@@ -1,0 +1,111 @@
+# GeneticM
+# 
+# Grow beat reactive digital art with ProjectM
+#
+# Copyright (c) 2010 Lydia Sevelt <LydiaSevelt@gmail.com>
+#
+# This library is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Lesser General Public
+# License as published by the Free Software Foundation; either
+# version 2 of the License, or (at your option) any later version.
+#
+# This library is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# License along with this program; if not, write to the
+# Free Software Foundation, Inc., 59 Temple Place, Suite 330,
+# Boston, MA  02111-1307  USA
+
+GeneticM is used to breed ProjectM preset files to generate them organically.
+
+GeneticM.py requires a playlist file and an output path to function. 
+
+The output path is where the new preset files will be written. 
+
+The playlist contains the presets you wish to breed.
+
+
+Preset Naming:
+
+Presets are created according to a naming convention:
+
+GeneticM-${Generation}-${Count}.prjm
+
+The count number can be ignored, it is only to ensure a unique name.
+
+The generation number is important as any preset "older" than ten 
+generations from the most recent generation will be "dead" of old 
+age and no longer eligible for breeding. For example, if the current 
+generation is 40, then any generation less than 30 will not be available 
+for breeding. Any presets in the playlist that do not follow this naming 
+convention will not be assigned a generation and therefore will always 
+be available for breeding. This can be used to seed some desired features 
+into a branch at the cost of some diversity. This is useful for making 
+"improved" versions of presets you already like, or a vast array of 
+variations on a preset you like.
+
+
+Voting:
+
+Preset breeding is weighted based on the "Soft Cut" ratings. The "Soft Cut" 
+ratings can be turned on via the ProjectM config, from the window menus:
+
+Settings -> Configure ProjectM
+
+Hard cut ratings are ignored so that they may be used to flag presets the 
+user wishes keep track of, i.e. very good presets the user wishes to breed 
+further or put into their normal viewing playlist. Soft cut ratings weight 
+the likelihood of the preset being bred. The lowest rating (no mushroom at 
+all) will prevent the preset from breeding at all, while the highest rating 
+(the 1up mushroom) will ensure that anytime the preset is selected via lottery 
+for potential breeding it will win the weighting check 100% of the time.
+
+Crashing presets:
+
+Occasionally a preset will be bred that will crash ProjectM, my recommendation 
+is to restart ProjectM and remove the offending preset from the playlist, 
+thereby removing it from the gene pool entirely and making sure you don't 
+accidentally crash ProjectM by playing the offender again.
+
+Examples:
+
+./GeneticM.py -l ~/GenMtest.ppl -o ~/GenM/
+
+Images:
+
+Images are "not fully supported" because I have not had time to fix it, but it 
+works perfectly fine if you wish to use it. You can use the images support to add 
+images to ProjectM presets, logos, names, symbols, shapes, whatever you like. 
+Images in ProjectM are in tga format, you can save to this format from the gimp.
+
+Example output of file:
+Targa image data - RGB - RLE 1306 x 441
+
+You will probably want to play with the size of the image until you find what works 
+best for your purposes.
+
+Once you have your images you need to place them into your output directory where 
+the presets you are breeding should also be placed, the images must be named:
+1.tga
+2.tga
+3.tga
+And so on..
+
+Next you have to make a minor modification to GeneticMlib.py, currently line 88:
+images = { 'min':1, 'max':5, 'type':'images' }
+
+Change the max value to be whatever you highest numbered image is.
+
+Lastly when you invoke GenticM you need to pass the -i option to allow images to be 
+mutated and not just ignored as they normally are.
+
+Example:
+
+./GeneticM.py -l ~/GenMtest.ppl -o ~/GenM/ -i
+
+Have breeding! and don't be shy about breeding hundreds of generations, selective 
+pressure over time produces interesting results!
+
