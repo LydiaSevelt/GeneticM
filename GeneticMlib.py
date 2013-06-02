@@ -1,10 +1,8 @@
 # GeneticM
 # 
-# Organic beat-reactive digital art
+# Grow beat reactive digital art with ProjectM
 #
-# Grow Art
-#
-# Copyright (c) 2010 Adam Paterna <LinuxGuruGuy@gmail.com>
+# Copyright (c) 2010 Lydia Sevelt <LydiaSevelt@gmail.com>
 #
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public

@@ -2,11 +2,9 @@
 #
 # GeneticM
 # 
-# Organic beat-reactive digital art
+# Grow beat reactive digital art with ProjectM
 #
-# Grow Art
-#
-# Copyright (c) 2010 Adam Paterna <LinuxGuruGuy@gmail.com>
+# Copyright (c) 2010 Lydia Sevelt <LydiaSevelt@gmail.com>
 #
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -34,7 +32,8 @@ import optparse
 import GeneticMlib
 
 # preset directory to use, this should be fixed as something a bit more dynamic and configurable later
-presets_directory = '/home/krylen/GeneticMcode3/test/'
+global presets_directory
+#presets_directory = '/home/krylen/GeneticMcode3/test/'
 #presets_directory = '/etc/projectM/presets/:/etc/projectM/presets.orig/'
 
 # if set to less than 2 it will default to 2
@@ -127,9 +126,9 @@ weighting_ranges = { \
 #
 ##################
 
-from IPython.Shell import IPShellEmbed
+#from IPython.Shell import IPShellEmbed
 
-ipshell = IPShellEmbed()
+#ipshell = IPShellEmbed()
 
 #################
 #
@@ -525,7 +524,6 @@ def breedParents(breeders, flock, seeds, generation, mutation_chances, possible_
 					block_number = gene_block_number
 					#print "block number:", block_number
 					# more goes here, like when blocks change and shit
-					# ^That's a real clear comment you asshat
 					#
 					# All that code replaced with this?
 					#
@@ -781,7 +779,6 @@ def breedParents(breeders, flock, seeds, generation, mutation_chances, possible_
 					block_number = gene_block_number
 					print "block number:", block_number
 					# more goes here, like when blocks change and shit
-					# ^Another brilliant comment, I know exactly what you were thinking
 					print `blocks_reference`, `block_number`
 					if blocks_reference.has_key(block_number):
 						# this *WILL* happen
@@ -900,8 +897,18 @@ def breedParents(breeders, flock, seeds, generation, mutation_chances, possible_
 	return
 
 def main():
-	"""This is a hulking piece of crap
+	"""non-playlist based breeding no longer allowed
 	Legacy code that will hopefully go away someday soon"""
+
+	if not options.playlist_file:
+		print "Playlist now required"
+		sys.exit(1)
+
+	if not options.output_path:
+		print "Output path required"
+		sys.exit(1)
+	
+	presets_directory = options.output_path
 
 	if options.playlist_file:
 		playlist = ProjectMPlaylist(options.playlist_file)
@@ -973,6 +980,7 @@ if not sre.match(".*pydoc$", sys.argv[0]):
 	# option parsing with optparse
 	opts_parser = optparse.OptionParser("usage: %prog [options]")
 	opts_parser.add_option("-l", "--playlist", dest="playlist_file", default=False, help="Specify the playlist file to use")
+	opts_parser.add_option("-o", "--outputpath", dest="output_path", default=False, help="Specify the output path, where new presets will be written")
 	opts_parser.add_option("-i", "--images", action="store_true", dest="images", default=False, help="Use images mode to mutate in images")
 	options, args = opts_parser.parse_args()
 	# run the main loop
