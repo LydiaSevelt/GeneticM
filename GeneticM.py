@@ -33,7 +33,7 @@ import GeneticMlib
 
 # preset directory to use, this should be fixed as something a bit more dynamic and configurable later
 global presets_directory
-#presets_directory = '/home/krylen/GeneticMcode3/test/'
+#presets_directory = '~/GeneticMcode3/test/'
 #presets_directory = '/etc/projectM/presets/:/etc/projectM/presets.orig/'
 
 # if set to less than 2 it will default to 2
