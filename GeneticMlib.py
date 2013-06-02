@@ -25,7 +25,6 @@ import sre, sys, random
 projectm_operators = [ '=','-', '+', '*', '/', '|', '&', '%' ]
 
 # projectm variables and if they are writable or not
-# we'll see how this plays out
 # True or False for writable or not
 
 # dictionary of projectM variables that take specific value ranges
