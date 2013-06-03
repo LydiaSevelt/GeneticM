@@ -28,6 +28,118 @@ The output path is where the new preset files will be written.
 The playlist contains the presets you wish to breed.
 
 
+QUICKSTART:
+
+First, install ProjectM either through your distro's package manager, or by 
+building it from source. I prefer to use the projectm-pulseaudio binary as a 
+stand alone that can take audio from any source.
+Here are some quick instructions on how to build ProjectM if you need to, 
+more detailed  instructions can be obtained from that project itself.
+
+Download projectM-complete-2.1.0-Source.tar.gz from http://projectm.sf.net
+
+uncompress and prepare to build it:
+$ tar -zxvf projectM-complete-2.1.0-Source.tar.gz
+$ cd projectM-complete-2.1.0-Source/src/
+$ ccmake .
+Hit 'c' to configure
+Turn on "INCLUDE-PROJECTM-PULSEAUDIO"
+Turn on "INCLUDE-PROJECTM-QT"
+Turn off all other "INCLUDE-PROJECTM-" options that you don't want
+I usually turn off everything except "INCLUDE-PROJECTM-PULSEAUDIO" and 
+"INCLUDE-PROJECTM-QT"
+Hit 'g' to generate
+$ make
+$ sudo make install
+
+You should now have a working projectm-pulseaudio binary that you can run.
+
+Step 1: Configure ProjectM
+
+start projectm-pulseaudio
+$ projectm-pulseaudio
+hit 'm' to show the playlist menu
+hit 'b' to show the menubar
+Go to Settings->Configure ProjectM
+Select "Soft Cut Ratings"
+Click "Save"
+Now close and restart projectm-pulseaudio
+
+Step 2: Select and prepare presets you want to breed.
+
+Create a directory for your newly breed presets to go to:
+$ mkdir ~/GeneticMpresets
+
+Look through the presets available and copy the ones you want to breed 
+with to your new directory, you require 25 or more to start with.
+
+ProjectM default preset installation location is:
+/usr/local/share/projectM/presets/
+
+Once you have all 25 or more convert them to match the required naming scheme
+*(FIXME - Presets should be automatically copied and renamed upon creation of 
+an inital playlist, as well as the playlist modified with the new names)*
+Here is a little code to help you out with this:
+$ cd ~/GeneticMpresets
+$ IFS=$'\n'; COUNT=0; for file in $(ls *); do mv "$file" GeneticM-0-$COUNT.prjm; COUNT=$(($COUNT+1)); done
+
+Step 3: Create inital playlist
+
+Open projectm-pulseaudio, clear the current playlist. Add presets to the current 
+playlist and select all presets in your ~/GeneticMpresets directory.
+Save out your new playlist to a location like: ~/GenMtest.ppl
+
+Step 4: Breed Generation One
+
+If you have not pulled the GeneticM code do so:
+$ git clone https://github.com/LydiaSevelt/GeneticM.git
+
+Breed your first generation:
+$ ./GeneticM/GeneticM.py -l ~/GenMtest.ppl -o ~/GeneticMpresets/
+
+Step 5: Play God
+
+This is the fun part. Now run ProjectM and open your GenMtest.ppl playlist and add all of your 
+newly generated presets to the playlist. Now look at each preset and decide how much you like 
+it, use the "soft cut" rating to determine how fit to breed each preset is. The lowest rating 
+(no mushroom) will make the preset unavailble for further breeding, it will never spawn ugly 
+children. The highest rating (the 1-up mushroom) will ensure that preset has a very very high 
+chance of breeding. Remember, your goal is play the part of selective pressure and drive the 
+evolution of your presets to something that you personally consider beautiful, you are the 
+cruel Aztec god slaughtering the ugly masses to make the beautiful flourish.
+
+What do to when a preset crashes ProjectM?
+Remove the offender from the playlist and move on with your life.
+
+What good is the "hard cut" rating?
+Use this to mark the presets you like and want to keep tabs on. Sometimes you will see a trait 
+that you want to encourage, but the overall preset is not that good. This second rating allows 
+you to tag the ones you really want and pull them out of your playlist file later with a little 
+grep/awk/sed.
+
+Step 6: Go back to Step 4
+
+Repeat endlessly, breed thousands of presets.
+
+*Note: After ten generations a presets will "die of old age" and will no longer be available for 
+breeding.
+
+Suggestions!:
+
+Put 25 copies of the same preset as the inital GeneticM-0 generation and start breeding that group. 
+This will let you take a single preset and slowly evolve it to be better and more complex based on 
+your personal tastes.
+
+Take similar presets and use those as a starting GeneticM-0 generation to produce a specific type 
+of preset based on your personal tastes.
+
+Force a preset to introduce it's genetic material into the pool by manually adding more entires for 
+it to the playlist file.
+
+Be patient, random mutation over a long period of time can introduce very interesting results!
+
+OTHER INFO:
+
 Preset Naming:
 
 Presets are created according to a naming convention:
@@ -40,13 +152,8 @@ The generation number is important as any preset "older" than ten
 generations from the most recent generation will be "dead" of old 
 age and no longer eligible for breeding. For example, if the current 
 generation is 40, then any generation less than 30 will not be available 
-for breeding. Any presets in the playlist that do not follow this naming 
-convention will not be assigned a generation and therefore will always 
-be available for breeding. This can be used to seed some desired features 
-into a branch at the cost of some diversity. This is useful for making 
-"improved" versions of presets you already like, or a vast array of 
-variations on a preset you like.
-
+for breeding. Presets that do not follow this naming convention will not 
+work and are likely to prevent the script from running (FIXME)
 
 Voting:
 
@@ -106,6 +213,6 @@ Example:
 
 ./GeneticM.py -l ~/GenMtest.ppl -o ~/GenM/ -i
 
-Have breeding! and don't be shy about breeding hundreds of generations, selective 
+Have fun breeding! and don't be shy about breeding hundreds of generations, selective 
 pressure over time produces interesting results!
 

@@ -431,7 +431,7 @@ class Evolver:
 #				line = '0'
 
 			if self.order.has_key(gene):
-				print "duplicate! skipping", `gene`
+				#print "duplicate! skipping", `gene`
 				continue
 
 			self.order_count += 1
@@ -459,10 +459,10 @@ class Evolver:
 					try:
 						t_val = int(line)
 						if projectm_genes[gene]['max'] and t_val > projectm_genes[gene]['max']:
-							print "over max"
+							#print "over max"
 							raise
 						if projectm_genes[gene]['min'] and t_val < projectm_genes[gene]['min']:
-							print "over under min"
+							#print "over under min"
 							raise
 						#if t_val > projectm_genes[gene]['max'] or t_val < projectm_genes[gene]['min']:
 						#	# not a valid value! raise an exception to fix it
@@ -476,10 +476,10 @@ class Evolver:
 						try:
 							t_val = int(float(line))
 							if projectm_genes[gene]['max'] and t_val > projectm_genes[gene]['max']:
-								print "over max"
+								#print "over max"
 								raise
 							if projectm_genes[gene]['min'] and t_val < projectm_genes[gene]['min']:
-								print "over under min"
+								#print "over under min"
 								raise
 							#if t_val > projectm_genes[gene]['max'] or t_val < projectm_genes[gene]['min']:
 							#	# not a valid value! raise an exception to fix it
@@ -491,10 +491,10 @@ class Evolver:
 							fail_flag = True
 					# fill in 0 for now
 					if fail_flag:
-						print "gene zeroed: ", gene
-						print "offender: ", `line`
+						#print "gene zeroed: ", gene
+						#print "offender: ", `line`
 						line = '0'
-						print "to1: ", line
+						#print "to1: ", line
 					# set the values in the DNA and continue
 #					print gene
 					self.tree[gene] = line
@@ -505,10 +505,10 @@ class Evolver:
 					try:
 						t_val = float(line)
 						if projectm_genes[gene]['max'] and t_val > projectm_genes[gene]['max']:
-							print "over max"
+							#print "over max"
 							raise
 						if projectm_genes[gene]['min'] and t_val < projectm_genes[gene]['min']:
-							print "over under min"
+							#print "over under min"
 							raise
 						#if t_val > projectm_genes[gene]['max'] or t_val < projectm_genes[gene]['min']:
 						#	# not a valid value! raise an exception to fix it
@@ -521,10 +521,10 @@ class Evolver:
 						try:
 							t_val = float(int(line))
 							if projectm_genes[gene]['max'] and t_val > projectm_genes[gene]['max']:
-								print "over max"
+								#print "over max"
 								raise
 							if projectm_genes[gene]['min'] and t_val < projectm_genes[gene]['min']:
-								print "over under min"
+								#print "over under min"
 								raise
 							#if t_val > projectm_genes[gene]['max'] or t_val < projectm_genes[gene]['min']:
 							#	# not a valid value! raise an exception to fix it
@@ -537,10 +537,10 @@ class Evolver:
 					
 					# fill it with the default 0.0 now
 					if fail_flag:
-						print "gene zeroed: ", gene
-						print "offender: ", `line`
+						#print "gene zeroed: ", gene
+						#print "offender: ", `line`
 						line = '0.0'
-						print "to2: ", line
+						#print "to2: ", line
 					# set the values in the DNA and continue
 #					print gene
 					self.tree[gene] = line
@@ -617,10 +617,10 @@ class Evolver:
 						try:
 							t_val = int(line)
 							if gene_check[gene_parts[2]]['max'] and t_val > gene_check[gene_parts[2]]['max']:
-								print "over max"
+								#print "over max"
 								raise
 							if gene_check[gene_parts[2]]['min'] and t_val < gene_check[gene_parts[2]]['min']:
-								print "over under min"
+								#print "over under min"
 								raise
 							#if t_val > gene_check[gene_parts[2]]['max'] or t_val < gene_check[gene_parts[2]]['min']:
 							#	# not a valid value! raise an exception to fix it
@@ -633,10 +633,10 @@ class Evolver:
 							try:
 								t_val = int(float(line))
 								if gene_check[gene_parts[2]]['max'] and t_val > gene_check[gene_parts[2]]['max']:
-									print "over max"
+									#print "over max"
 									raise
 								if gene_check[gene_parts[2]]['min'] and t_val < gene_check[gene_parts[2]]['min']:
-									print "over under min"
+									#print "over under min"
 									raise
 								#if t_val > projectm_genes[gene_parts[2]]['max'] or t_val < projectm_genes[gene_parts[2]]['min']:
 								#	# not a valid value! raise an exception to fix it
@@ -649,10 +649,10 @@ class Evolver:
 								fail_flag = True
 						if fail_flag:
 							# fill in 0 for now
-							print "gene zeroed: ", gene
-							print "offender: ", `line`
+							#print "gene zeroed: ", gene
+							#print "offender: ", `line`
 							line = '0'
-							print "to3: ", line
+							#print "to3: ", line
 						# set this as a block gene
 						# type = init or script
 						# value is a tuple: number, order number, wave or shape, type, sub-gene, value (or parser list)
@@ -669,10 +669,10 @@ class Evolver:
 						try:
 							t_val = float(line)
 							if gene_check[gene_parts[2]]['max'] and t_val > gene_check[gene_parts[2]]['max']:
-								print "over max"
+								#print "over max"
 								raise
 							if gene_check[gene_parts[2]]['min'] and t_val < gene_check[gene_parts[2]]['min']:
-								print "over under min"
+								#print "over under min"
 								raise
 							#if t_val > gene_check[gene_parts[2]]['max'] or t_val < gene_check[gene_parts[2]]['min']:
 							#	# not a valid value! raise an exception to fix it
@@ -686,10 +686,10 @@ class Evolver:
 							try:
 								t_val = float(int(line))
 								if gene_check[gene_parts[2]]['max'] and t_val > gene_check[gene_parts[2]]['max']:
-									print "over max"
+									#print "over max"
 									raise
 								if gene_check[gene_parts[2]]['min'] and t_val < gene_check[gene_parts[2]]['min']:
-									print "over under min"
+									#print "over under min"
 									raise
 								#if t_val > projectm_genes[gene_parts[2]]['max'] or t_val < projectm_genes[gene_parts[2]]['min']:
 								#	# not a valid value! raise an exception to fix it
@@ -702,10 +702,10 @@ class Evolver:
 								fail_flag = True
 						if fail_flag:
 							# fill it with the default 0.0 now
-							print "gene zeroed: ", gene
-							print "offender: ", `line`
+							#print "gene zeroed: ", gene
+							#print "offender: ", `line`
 							line = '0.0'
-							print "to4: ", line
+							#print "to4: ", line
 						# set this as a block gene
 						# type = init or script
 						# value is a tuple: number, order number, wave or shape, type, sub-gene, value (or parser list)
@@ -909,7 +909,7 @@ class Evolver:
 		#############
 		#print `self.order`
 		self.blocks.sort()
-		print `self.blocks`
+		#print `self.blocks`
 #		for gene in self.tree:
 #			if sre.match('^wavecode', gene):
 #				print self.blocks
@@ -929,7 +929,7 @@ class Evolver:
 #			file = open(presets_directory + 'GeneticM-' + `generation` + '-' + `count` + '.milk', 'w')
 			file.write('[preset00]\n')
 	#   print child
-		print "nothin"
+		#print "nothin"
 		self.parents_order = sorted(self.parents_order)
 		#print self.parents_order
 		# changing to preserve ordering
@@ -1162,7 +1162,8 @@ class Evolver:
 				### Print out user variables here, for fixing cross contamination
 				if not projectm_variables.has_key(variable):
 					# must be user set or a variable we arn't dealing with, ignore it
-					print "user var:", `variable`
+					#print "user var:", `variable`
+					pass
 				### End User var notification
 
 	#		   depth += 1
@@ -1251,7 +1252,7 @@ class Evolver:
 			object_two = random.randint(0, mutate_max)
 			if not object_one == object_two:
 				break
-		print "object number swap:", object_one, object_two
+		#print "object number swap:", object_one, object_two
 		# swap numbers
 		count = 0
 		for line in self.blocks:
@@ -1324,46 +1325,46 @@ class Evolver:
 			print type
 			print gene
 			sys.exit()
-		print "gene check for gene_check:", `gene`
+		#print "gene check for gene_check:", `gene`
 		if gene_check.has_key(gene):
 			if gene_check[gene]['type'] == 'int':
 				if gene_check[gene]['max'] and gene_check[gene]['max'] != 0:
 					# mutate this int within it's valid values
 					if type == 'pre':
 						self.tree[gene] = `random.randint(gene_check[gene]['min'], gene_check[gene]['max'])`
-						print "11--", `gene`
+						#print "11--", `gene`
 					elif type == 'block':
-						print "11-", `gene`
+						#print "11-", `gene`
 						self.blocks_content[gene] = `random.randint(gene_check[gene]['min'], gene_check[gene]['max'])`
 					else:
 						# type == 'block init'
-						print "11-", `gene`
+						#print "11-", `gene`
 						self.blocks_content[full_gene] = `random.randint(gene_check[gene]['min'], gene_check[gene]['max'])`
 				elif gene_check[gene]['min'] and gene_check[gene]['min'] != 0:
 					# this can be any number greater than 0
 					# give the abs of good old integer mutation
 					if type == 'pre':
 						self.tree[gene] = `abs(int(self.integer_mutation(line)))`
-						print "12--", `gene`
+						#print "12--", `gene`
 					elif type == 'block':
-						print "12-", `gene`
+						#print "12-", `gene`
 						self.blocks_content[gene] = `abs(int(self.integer_mutation(line)))`
 					else:
 						# type == 'block init'
-						print "12-", `gene`
+						#print "12-", `gene`
 						self.blocks_content[full_gene] = `abs(int(self.integer_mutation(line)))`
 				else:
 					# any value goes here
 					# use traditional integer mutation
 					if type == 'pre':
 						self.tree[gene] = self.integer_mutation(line)
-						print "13--", `gene`
+						#print "13--", `gene`
 					elif type == 'block':
-						print "13-", `gene`
+						#print "13-", `gene`
 						self.blocks_content[gene] = self.integer_mutation(line)
 					else:
 						# type == 'block init'
-						print "13-", `gene`
+						#print "13-", `gene`
 						self.blocks_content[full_gene] = self.integer_mutation(line)
 				return
 			elif gene_check[gene]['type'] == 'float':
@@ -1386,13 +1387,13 @@ class Evolver:
 					#print new_number, gene_check[gene]['min'], gene_check[gene]['max']
 				if type == 'pre':
 					self.tree[gene] = new_number
-					print "14--", `gene`
+					#print "14--", `gene`
 				elif type == 'block':
-					print "14-", `gene`
+					#print "14-", `gene`
 					self.blocks_content[gene] = new_number
 				else:
 					# type == 'block init'
-					print "14-", `gene`
+					#print "14-", `gene`
 					self.blocks_content[full_gene] = new_number
 #				print "done with crappy float fix loop"
 			elif gene_check[gene]['type'] == 'ignore':
@@ -1417,7 +1418,7 @@ class Evolver:
 #			print gene
 			return
 # all lines from here out are now scripts, treat them as such
-		print "15-", `gene`
+		#print "15-", `gene`
 		self.blocks_content[gene] = self.equation_mutator(line, mutation_chances, verbose)
 
 		# redundent check now *shrug*
@@ -1490,10 +1491,10 @@ class Evolver:
 		type_flag = False
 		branch_skip = 0
 		new_equation = []
-		print "equation:", `equation`
+		#print "equation:", `equation`
 		for branch in equation:
 			if branch_skip < 0:
-				print "branch_skip", branch_skip
+				#print "branch_skip", branch_skip
 				branch_skip += 1
 				continue
 			if type_flag:
@@ -1508,7 +1509,7 @@ class Evolver:
 				try:
 					temp = int(branch[1])
 					branch[1] = self.integer_mutation(branch[1])
-					print "int mute"
+					#print "int mute"
 				except:
 					# not an int
 					pass
@@ -1517,7 +1518,7 @@ class Evolver:
 					temp = float(branch[1])
 #					print "hey-ok", temp
 					branch[1] = self.float_mutation(branch[1])
-					print "float mute"
+					#print "float mute"
 #					print "what now?", branch
 				except:
 					# not a float
@@ -1535,9 +1536,9 @@ class Evolver:
 				branch[1], function_changes = self.function_mutation(branch[1])
 				####
 				# possible post function cleanup being built
-				print "no ", function_changes
+				#print "no ", function_changes
 				while function_changes != 0:
-					print "function changes=", function_changes
+					#print "function changes=", function_changes
 					if function_changes > 0:
 						# the constructor is how many "equation parts" will be randomly generated and added to make a branch
 						constructor = random.randint(1, mutation_chances['constructor'])
@@ -1552,7 +1553,7 @@ class Evolver:
 						function_changes -= 1
 					elif function_changes < 0:
 						branch_skip = function_changes
-						print "new branch_skip", branch_skip
+						#print "new branch_skip", branch_skip
 						break
 				# end
 				###
@@ -1736,7 +1737,7 @@ class Evolver:
 		if it's a projectm variable then give it a go at mutation"""
 		if not projectm_variables.has_key(variable):
 			# must be user set or a variable we arn't dealing with, ignore it
-			print "user var!", `variable`
+			#print "user var!", `variable`
 			return variable
 		# yeah, that same gross way of getting a random variable
 		# oh well, it has to be gutted later anyway
@@ -1801,7 +1802,7 @@ class Evolver:
 	def addition_mutator(self, branch, new_equation, verbose):
 		"""This creates a new branch of equation to be added to an equation being mutated"""
 		# this is still really really really basic code
-		verbose = True
+		#verbose = True
 		if verbose:
 			print "orig_equation:", `new_equation`
 		type = random.randint(0,2)
