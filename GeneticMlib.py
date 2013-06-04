@@ -922,11 +922,13 @@ class Evolver:
 #			print gene
 	#	   count += 1
 	
-	def writeFile(self, count, generation, presets_directory, pretend):
+	def writeFile(self, count, generation, presets_directory, milkdrop, pretend):
 		"""This writes out the new Child preset, numbering it"""
 		if not pretend:
-			file = open(presets_directory + 'GeneticM-' + `generation` + '-' + `count` + '.prjm', 'w')
-#			file = open(presets_directory + 'GeneticM-' + `generation` + '-' + `count` + '.milk', 'w')
+			if milkdrop:
+				file = open(presets_directory + 'GeneticM-' + `generation` + '-' + `count` + '.milk', 'w')
+			else:
+				file = open(presets_directory + 'GeneticM-' + `generation` + '-' + `count` + '.prjm', 'w')
 			file.write('[preset00]\n')
 	#   print child
 		#print "nothin"

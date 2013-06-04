@@ -139,11 +139,15 @@ weighting_ranges = { \
 class ProjectMPlaylist:
 	"""Project M Playlist Object"""
 	
-	def __init__(self, filename):
+	def __init__(self, filename, suffix):
 		"""Fill me in with descriptive words"""
 		self.filename = filename
 		self.file_lines = []
 		self.flock = {}
+		if suffix:
+			self.suffix = "milk"
+		else:
+			self.suffix = "prjm"
 
 	def readFile(self):
 		"""Read in a playlist"""
@@ -157,7 +161,7 @@ class ProjectMPlaylist:
 		for line in rawfile:
 			# skip this section if looking for breedability
 			if not breed_flag:
-				linefile = re.search('/.[^>,<]*\.prjm', line)
+				linefile = re.search('/.[^>,<]*\.' + self.suffix, line)
 				if linefile == type([]):
 					sys.exit('Playlist file in wrong format, more than one preset per line')
 				if not linefile:
@@ -345,7 +349,7 @@ def selectBreeders2(seeds, children, possible_parents, too_old, flock):
 	return parents
 
 
-def breedParents(breeders, flock, seeds, generation, mutation_chances, possible_parents, presets_directory, pretend, verbose):
+def breedParents(breeders, flock, seeds, generation, mutation_chances, possible_parents, presets_directory, milkdrop, pretend, verbose):
 	"""This takes the dictionary of pairs and breeds them together
 	This includes mutation, and later will include equation editing"""
 	# group is a terrible name for this variable
@@ -372,7 +376,10 @@ def breedParents(breeders, flock, seeds, generation, mutation_chances, possible_
 		parent_one = flock[breeders[group][winner]]
 		# choose next parent
 		seeds += 1
-		child_file = presets_directory + 'GeneticM-' + `generation` + '-' + `count` + '.prjm'
+		if milkdrop:
+			child_file = presets_directory + 'GeneticM-' + `generation` + '-' + `count` + '.milk'
+		else:
+			child_file = presets_directory + 'GeneticM-' + `generation` + '-' + `count` + '.prjm'
 		child = GeneticMlib.Evolver(child_file, False)
 		# append parent name
 		child.parents_names.append(parent_one.file)
@@ -892,7 +899,7 @@ def breedParents(breeders, flock, seeds, generation, mutation_chances, possible_
 			#for block_line in blocks_reference:
 				#print `block_line`, blocks_reference[block_line]
 			#print `child.blocks`
-			child.writeFile(seeds, generation, presets_directory, pretend)
+			child.writeFile(seeds, generation, presets_directory, options.milkdrop, pretend)
 #			print "writeChildPreset_exp(" + child.file, seeds, generation, presets_directory, `pretend` + ")"
 	return
 
@@ -911,7 +918,7 @@ def main():
 	presets_directory = options.output_path
 
 	if options.playlist_file:
-		playlist = ProjectMPlaylist(options.playlist_file)
+		playlist = ProjectMPlaylist(options.playlist_file, options.milkdrop)
 		playlist.readFile()
 		
 		# Return "This" Generation's number
@@ -929,7 +936,7 @@ def main():
 		#print breeders
 		#for file in flock:
 
-		breedParents(breeders, playlist.flock, playlist.total_presets, generation, mutation_chances, possible_parents, presets_directory, False, False)
+		breedParents(breeders, playlist.flock, playlist.total_presets, generation, mutation_chances, possible_parents, presets_directory, options.milkdrop, False, False)
 
 		print "new ok"
 
@@ -982,6 +989,7 @@ if not sre.match(".*pydoc$", sys.argv[0]):
 	opts_parser.add_option("-l", "--playlist", dest="playlist_file", default=False, help="Specify the playlist file to use")
 	opts_parser.add_option("-o", "--outputpath", dest="output_path", default=False, help="Specify the output path, where new presets will be written")
 	opts_parser.add_option("-i", "--images", action="store_true", dest="images", default=False, help="Use images mode to mutate in images")
+	opts_parser.add_option("-m", "--milkdrop", action="store_true", dest="milkdrop", default=False, help="Milkdrop suport (?) - use .milk suffix instead of .prjm")
 	options, args = opts_parser.parse_args()
 	# run the main loop
 	main()
